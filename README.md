@@ -2,7 +2,7 @@
 
 Keep it simple. Explain any tech topic to a developer as one plain HTML page.
 
-![The glance: the whole flow as route pills with a character in each, the deciding stop marked in yellow](docs/hero.png)
+![The top of a kiss page: the title, a two-line trace, the route of stops, and step 1 with a laptop, an orange key and a post box](docs/hero.png)
 
 ```
 /kiss how CORS works
@@ -14,12 +14,11 @@ Keep it simple. Explain any tech topic to a developer as one plain HTML page.
 
 **Zoom, don't simplify.** You get one page with:
 
-- **The answer in the title.** You get it in five seconds.
-- **The whole thing at a glance.** One drawing of the full flow, in plain words.
-- **Zooms into each box.** Drawings with the real names, the step that matters highlighted, then the same idea "in plain words".
-- **The catch.** The one thing that bites people.
-- **Push further.** The questions a sharp reader asks next, with short answers behind a click.
-- **An honest footer.** What was simplified, the sources, and where it lives in your code.
+- **The trace and the route.** One concrete example in two sentences, then every stop it makes, in order.
+- **One stamped step per stop.** A big flat drawing on the left. On the right, what happens in plain words, then the real names.
+- **One orange thing per drawing.** The part that decides.
+- **A why step** when the design choice is the surprising part.
+- **An honest end box.** The catch, the questions to ask next, what was simplified, the sources, and anything not verified.
 
 ## Depth
 
@@ -27,25 +26,21 @@ Simple means fewer ideas, never wrong ones. Pick how far down you go:
 
 | | Reader | What changes |
 |---|---|---|
-| `simple` | new to the field | 2–3 zooms in plain words. No code. |
-| default | a developer new to the topic | 3–5 zooms with real names, each with a short "Under the hood". |
-| `deep` | an engineer who wants the internals | Sequence diagrams and state machines, failure modes, real numbers, real code. |
+| `simple` | new to the field | 3–4 steps in plain words. No code. |
+| default | a developer new to the topic | 4–6 steps with the real names, each with a short "under the hood". |
+| `deep` | an engineer who wants the internals | 6–8 steps plus a why step: failure modes, real numbers, requests and code. |
 
-![A step: a scene card on the left where a doorman knocks on the API's door with a yellow OPTIONS card, and the stamp, claim and words on the right](docs/zoom.png)
+![A step in dark mode: a filing cabinet with the INBOX drawer in orange and Bob's phone on the left, the stamp, claim and words on the right](docs/zoom.png)
 
 Ask about code in your project and it reads the code first, then uses the real file and function names.
 
-The page is a single HTML file: no framework, light and dark mode, phone-friendly. If your Claude can publish artifacts, it publishes one. Otherwise it saves `kiss-<topic>.html`.
+The page is a single HTML file in Claude's palette (black ink, warm greys, one orange): no framework, light and dark mode, phone-friendly. If your Claude can publish artifacts, it publishes one. Otherwise it saves `kiss-<topic>.html`.
 
 The skill ships a reference page, [`skills/kiss/example.html`](skills/kiss/example.html) (how an email reaches an inbox), that sets the drawing bar for every run.
 
-See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html), Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)) and DNS ([`how-dns-works.html`](examples/how-dns-works.html)).
+See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)), Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)) and DNS ([`how-dns-works.html`](examples/how-dns-works.html)).
 
-<img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a big yellow guest-list clipboard scene above its stamped step" width="320">
-
-Every page draws with the same cast of characters and scene props, so you remember pictures, not boxes.
-
-![The cast: 19 characters and 9 scene props](docs/cast.png)
+<img src="docs/phone-dark.jpg" alt="The same step on a phone in dark mode: the cabinet drawing above its stamped heading and words" width="320">
 
 ## Install
 
