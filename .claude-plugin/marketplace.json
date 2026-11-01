@@ -1,0 +1,16 @@
+{
+  "name": "kiss",
+  "description": "Keep it simple: plain HTML explainers for developers.",
+  "owner": {
+    "name": "Eran Peled",
+    "url": "https://github.com/eranltd"
+  },
+  "plugins": [
+    {
+      "name": "kiss",
+      "source": "./",
+      "description": "Keep it simple: explain any tech topic to a developer as one plain HTML page with one everyday metaphor, a few picture steps and very few words.",
+      "category": "learning"
+    }
+  ]
+}

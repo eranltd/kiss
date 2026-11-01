@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Reads the Reply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a printed manual marked up in red pen. The hero shows the whole cast at a glance; each zoom draws one part with the same characters, then says it twice: in plain words and under the hood. */
+:root{
+  --paper:oklch(98.4% .005 250); --paper-2:oklch(95.4% .007 250); --ink:oklch(22% .03 258); --ink-2:oklch(38% .025 258);
+  --muted:oklch(47% .02 258); --rule:oklch(87% .009 250); --accent:oklch(54% .19 33);
+  --band:var(--ink); --band-ink:var(--paper); --band-chip:oklch(31% .03 258);
+  --c-blue:oklch(86% .07 240); --c-green:oklch(88% .08 150); --c-yellow:oklch(92% .1 95); --c-pink:oklch(87% .07 10); --c-gray:oklch(92% .01 250);
+  --serif:"Newsreader",ui-serif,Georgia,serif; --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --space-xs:8px; --space-sm:12px; --space-md:16px; --space-lg:24px; --space-xl:40px; --space-2xl:64px;
+  --space-section:clamp(4rem,2rem + 8vw,9rem); --gutter:clamp(1rem,4vw,4rem); --hang:clamp(2.25rem,1rem + 5vw,6rem);
+  --text-sm:.9375rem; --text-md:1rem; --text-plain:clamp(1.125rem,1rem + .55vw,1.375rem); --text-lead:clamp(1.25rem,1rem + 1vw,1.625rem);
+  --text-section:clamp(1.625rem,1.1rem + 1.9vw,2.625rem); --text-statement:clamp(2rem,1.1rem + 3.2vw,3.5rem); --text-display:clamp(2.375rem,1.2rem + 4.2vw,4.25rem);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
+  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
+  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
+  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
+  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
+  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
+  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0}
+html,body{overflow-x:clip}
+body{background:var(--paper);color:var(--ink);font:400 var(--text-plain)/1.6 var(--serif);-webkit-font-smoothing:antialiased}
+.wrap{max-width:75rem;margin-inline:auto;padding-inline:var(--gutter);display:grid;grid-template-columns:var(--hang) minmax(0,1fr)}
+.wrap>*{grid-column:1/-1;min-width:0}
+@media (min-width:48rem){.wrap>*{grid-column:2}}
+h1,h2{font-family:var(--serif);font-weight:600;text-wrap:balance;overflow-wrap:break-word}
+h1{font-size:var(--text-display);line-height:1.04;letter-spacing:-.022em;max-width:22ch}
+h2{font-size:var(--text-section);line-height:1.12;letter-spacing:-.015em;max-width:30ch}
+p{text-wrap:pretty;max-width:60ch}
+strong{font-weight:600}
+a{color:inherit;text-decoration-color:var(--accent);text-decoration-thickness:1.5px;text-underline-offset:.2em}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+code{font:400 .86em/1 var(--mono);background:var(--paper-2);padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}
+pre{font:400 var(--text-sm)/1.6 var(--mono);background:var(--paper-2);padding:var(--space-md);border-radius:3px;overflow-x:auto;max-width:60ch}
+pre code{font-size:inherit;background:none;padding:0}
+
+.hero{padding-block:var(--space-section) var(--space-2xl)}
+.lede{font-size:var(--text-lead);line-height:1.45;color:var(--muted);max-width:44ch;margin-top:var(--space-lg)}
+
+/* The glance: the whole cast in a row on wide screens, a column on phones. */
+.cast{list-style:none;padding:0;margin-top:var(--space-2xl);display:flex;flex-wrap:wrap;gap:var(--space-lg) var(--space-xl)}
+.cast li{position:relative;display:grid;justify-items:center;align-content:start;gap:4px;width:7.5rem;text-align:center;font:400 var(--text-sm)/1.3 var(--sans)}
+.cast li+li::before{content:"";position:absolute;left:calc(var(--space-xl) * -1 + 6px);top:1.9rem;width:calc(var(--space-xl) - 12px);height:12px;background:var(--ink-2);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.cast .ico{width:4.5rem;height:4.5rem;overflow:visible}
+.cast b{font-weight:600}
+.cast code{font-size:.8em}
+.cast li.hl::after{content:"";position:absolute;inset:-.7rem -.5rem;border:2.5px solid var(--accent);border-radius:46% 54% 42% 58%/56% 44% 56% 44%;transform:rotate(-4deg);pointer-events:none}
+@media (max-width:40rem){
+  .cast{flex-direction:column;gap:var(--space-xl)}
+  .cast li{width:auto;grid-template-columns:4rem minmax(0,1fr);justify-items:start;align-items:center;text-align:left;column-gap:var(--space-md)}
+  .cast li>:not(.ico){grid-column:2}
+  .cast li .ico{grid-row:1/span 2;width:4rem;height:4rem}
+  .cast li+li::before{left:1.4rem;top:calc(var(--space-xl) * -1 + 4px);width:calc(var(--space-xl) - 8px);height:12px;transform-origin:left center;transform:rotate(90deg) translateY(-50%)}
+  .cast li.hl::after{inset:-.6rem -.6rem;right:auto;width:min(100%,18rem)}
+}
+.caption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted);margin-top:var(--space-lg)}
+.glance-words{margin-top:var(--space-md)}
+
+/* Zooms: a numbered list. The number hangs left of the claim; the drawing and the words sit side by side on wide screens. */
+.zooms{list-style:none;padding:0;counter-reset:zoom}
+.zoom{counter-increment:zoom;row-gap:var(--space-lg);padding-block:0 var(--space-section)}
+.zoom::before{content:"";grid-column:1/-1;border-top:2px solid var(--ink);margin-bottom:var(--space-xl)}
+.zoom h2{grid-column:2;position:relative}
+.zoom h2::before{content:counter(zoom);position:absolute;right:100%;padding-right:var(--space-sm);color:var(--accent);font-variant-numeric:lining-nums tabular-nums}
+@media (min-width:48rem){.zoom h2::before{padding-right:var(--space-lg)}}
+.zoom-body{display:grid;gap:var(--space-lg);align-items:start}
+@media (min-width:64rem){.zoom-body{grid-template-columns:minmax(0,31rem) minmax(0,1fr);gap:var(--space-2xl)}}
+.words{display:grid;gap:var(--space-md)}
+.hood{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);border-left:1px solid var(--rule);padding-left:var(--space-md)}
+.hood strong{color:var(--ink)}
+.hood ol{padding-left:1.2em;display:grid;gap:4px}
+
+/* Drawings: 400 units wide, so a phone shows them at about 80% with readable labels. */
+.drawing{display:grid;gap:var(--space-xs)}
+.drawing svg{display:block;width:100%;max-width:31rem;height:auto;overflow:visible}
+.drawing figcaption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted)}
+.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:url(#rough)}
+.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.dot{fill:var(--ink)}
+.wire{stroke:var(--ink-2);stroke-width:2;fill:none;stroke-linecap:round}
+.hot{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round}
+.cut{stroke-dasharray:6 6}
+.life{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 6;stroke-linecap:round}
+.pen{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
+.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+.n{font:600 15px var(--sans);fill:var(--ink);text-anchor:middle}
+.t{font:400 13px var(--mono);fill:var(--muted);text-anchor:middle}
+.l{font:400 14px var(--sans);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.l.h{fill:var(--accent);font-weight:600}
+.num-bg{fill:var(--ink)}
+.num{font:600 11px var(--mono);fill:var(--paper);text-anchor:middle}
+.tip{fill:var(--ink-2)}
+.tip-hot{fill:var(--accent)}
+
+/* The catch: the one change of paper on the page. */
+.catch{background:var(--band);color:var(--band-ink);padding-block:var(--space-section)}
+.catch h2{font-size:var(--text-statement);line-height:1.06;max-width:20ch}
+.catch p{max-width:58ch;margin-top:var(--space-lg)}
+.catch code{background:var(--band-chip)}
+
+.further{padding-block:var(--space-section) 0}
+.further h2{margin-bottom:var(--space-lg)}
+.further details{border-top:1px solid var(--rule);padding-block:var(--space-md);max-width:48rem}
+.further details:last-child{border-bottom:1px solid var(--rule)}
+.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:600 var(--text-md)/1.5 var(--sans)}
+.further summary::-webkit-details-marker{display:none}
+.further summary::before{content:"+";font-family:var(--mono);color:var(--accent)}
+.further details[open] summary::before{content:"−"}
+.further details p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);margin:var(--space-xs) 0 0 1.5rem}
+
+/* Decision pages only. */
+.compare{display:grid;gap:var(--space-xl)}
+.compare>*{border-top:1px solid var(--rule);padding-top:var(--space-md)}
+.compare>.pick{border-top:3px solid var(--accent)}
+.compare h3{font:600 var(--text-md)/1.4 var(--sans);margin-bottom:var(--space-xs)}
+.compare p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2)}
+@media (min-width:48rem){.compare{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.table{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font:400 var(--text-md)/1.5 var(--sans)}
+th,td{text-align:left;vertical-align:top;padding:var(--space-sm) var(--space-md) var(--space-sm) 0;border-bottom:1px solid var(--rule)}
+th{font-weight:600;color:var(--muted)}
+
+.colophon{padding-block:var(--space-2xl) var(--space-section);font:400 var(--text-sm)/1.6 var(--sans);color:var(--muted)}
+.colophon p+p{margin-top:var(--space-xs)}
+.colophon strong{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<!-- The cast. Actors have faces; objects do not. Recolor one use with style="--fill:var(--c-pink)". If the cast lacks something, draw it the same way: 64×64, class "o" outline, one crayon fill, a face only for an actor. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1400" height="1400"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <symbol id="ico-browser" viewBox="0 0 64 64"><rect class="o" x="6" y="10" width="52" height="44" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M6 21h52"/><circle class="dot" cx="13" cy="15.5" r="1.8"/><circle class="dot" cx="19" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="34" r="2.6"/><circle class="dot" cx="39" cy="34" r="2.6"/><path class="o" d="M26 42q6 5 12 0"/></symbol>
+  <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
+  <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
+  <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
+  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--accent)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
+  <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
+  <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
+  <symbol id="ico-lock" viewBox="0 0 64 64"><path class="o" d="M21 29v-8a11 11 0 0 1 22 0v8"/><rect class="o" x="13" y="29" width="38" height="28" rx="5" style="fill:var(--fill,var(--c-yellow))"/><circle class="dot" cx="32" cy="40" r="3"/><path class="o" d="M32 42v6"/></symbol>
+  <symbol id="ico-list" viewBox="0 0 64 64"><rect class="o" x="12" y="10" width="40" height="49" rx="5" style="fill:var(--fill,var(--paper))"/><rect class="o" x="23" y="5" width="18" height="9" rx="3" style="fill:var(--c-gray)"/><path class="o" d="M19 27l3 3 5-6M32 27h13M19 39l3 3 5-6M32 39h13M21 50h4M32 50h13"/></symbol>
+  <symbol id="ico-clock" viewBox="0 0 64 64"><circle class="o" cx="32" cy="33" r="23" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 19v14l9 6M26 6h12"/></symbol>
+  <symbol id="ico-cloud" viewBox="0 0 64 64"><path class="o" d="M19 49h29a11 11 0 0 0 1-22 15 15 0 0 0-29-3 12.5 12.5 0 0 0-1 25z" style="fill:var(--fill,var(--c-blue))"/></symbol>
+  <symbol id="ico-gear" viewBox="0 0 64 64"><circle cx="32" cy="32" r="21" fill="none" stroke="var(--ink)" stroke-width="8" stroke-dasharray="5.5 5.5"/><circle class="o" cx="32" cy="32" r="17" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="32" cy="32" r="5.5" style="fill:var(--paper)"/></symbol>
+  <symbol id="ico-box" viewBox="0 0 64 64"><path class="o" d="M10 22l22-11 22 11v24L32 57 10 46z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M10 22l22 11 22-11M32 33v24"/></symbol>
+  <symbol id="ico-shield" viewBox="0 0 64 64"><path class="o" d="M32 5l21 7v16c0 14-9 24-21 31C20 52 11 42 11 28V12z" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M23 32l6 6 12-13"/></symbol>
+  <symbol id="ico-bolt" viewBox="0 0 64 64"><path class="o" d="M37 4L14 36h15l-4 24 25-34H35z" style="fill:var(--fill,var(--c-yellow))"/></symbol>
+  <symbol id="ico-stop" viewBox="0 0 64 64"><path class="o" d="M22 6h20l14 14v20L42 54H22L8 40V20z" style="fill:var(--fill,var(--c-pink))"/><path class="o" d="M24 22l16 16M40 22L24 38"/></symbol>
+  <symbol id="ico-check" viewBox="0 0 64 64"><circle class="o" cx="32" cy="32" r="24" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 33l8 8 15-17"/></symbol>
+</svg>
+
+
+<main>
+  <header class="wrap hero">
+    <h1>The browser hides the reply unless the server lists your origin.</h1>
+    <p class="lede">Your page on <code>app.example.com</code> calls <code>fetch('https://api.example.com/orders')</code>. The server answers, and then the browser reads one reply header to decide if your code may see the data.</p>
+    <ol class="cast" aria-label="The whole flow at a glance">
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-robot"/></svg><b>Your script</b><code>app.example.com</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-browser"/></svg><b>Doorman</b><code>browser</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-letter"/></svg><b>Call ahead</b><code>OPTIONS</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-server"/></svg><b>The API</b><code>api.example.com</code></li>
+      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-list"/></svg><b>Guest list</b><code>ACAO header</code></li>
+    </ol>
+    <p class="caption">Circled: the guest list, because one reply header decides whether your script sees the data. The drawings below zoom into each part.</p>
+    <p class="glance-words"><strong>In plain words.</strong> Your script asks another origin for data. The browser acts as a <strong>doorman</strong>: it lets the request out, then reads the reply first. The server writes a guest list on the reply (<code>Access-Control-Allow-Origin</code>). If your origin is on it, your script gets the data. If not, the browser drops it.</p>
+  </header>
+
+  <ol class="zooms">
+    <li class="wrap zoom">
+      <h2>An origin is scheme, host and port, all three.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 400 330" role="img" aria-label="The origin https://app.example.com is split into three parts: scheme, host and port. Four URLs are compared with it: the same address with a different path is the same origin, while a different scheme, a different subdomain and a different port are each cross-origin.">
+            <use href="#ico-robot" x="4" y="0" width="44" height="44"/>
+            <text class="n" x="58" y="28" style="text-anchor:start">Your script's origin</text>
+            <rect class="box" x="12" y="56" width="96" height="34" rx="5"/><text class="t" x="60" y="78">https://</text>
+            <rect class="box" x="116" y="56" width="166" height="34" rx="5"/><text class="t" x="199" y="78">app.example.com</text>
+            <rect class="box" x="290" y="56" width="98" height="34" rx="5"/><text class="t" x="339" y="78">:443</text>
+            <text class="l" x="60" y="110">scheme</text><text class="l" x="199" y="110">host</text><text class="l" x="339" y="110">port</text>
+
+            <circle class="num-bg" cx="14" cy="152" r="9"/><text class="num" x="14" y="156">1</text>
+            <use href="#ico-check" x="30" y="138" width="28" height="28"/>
+            <text class="t" x="68" y="150" style="text-anchor:start">https://app.example.com/orders</text>
+            <text class="l" x="68" y="169" style="text-anchor:start">same origin: the path does not count</text>
+
+            <circle class="num-bg" cx="14" cy="202" r="9"/><text class="num" x="14" y="206">2</text>
+            <use href="#ico-stop" x="30" y="188" width="28" height="28"/>
+            <text class="t" x="68" y="200" style="text-anchor:start">http://app.example.com</text>
+            <text class="l" x="68" y="219" style="text-anchor:start">cross-origin: the scheme differs</text>
+
+            <circle class="num-bg" cx="14" cy="252" r="9"/><text class="num" x="14" y="256">3</text>
+            <use href="#ico-stop" x="30" y="238" width="28" height="28"/>
+            <text class="t" x="68" y="250" style="text-anchor:start">https://<tspan style="fill:var(--accent)">api</tspan>.example.com</text>
+            <ellipse class="pen" cx="142" cy="245" rx="19" ry="13" transform="rotate(-6 142 245)"/>
+            <text class="l" x="68" y="269" style="text-anchor:start">cross-origin: the host differs</text>
+
+            <circle class="num-bg" cx="14" cy="302" r="9"/><text class="num" x="14" y="306">4</text>
+            <use href="#ico-stop" x="30" y="288" width="28" height="28"/>
+            <text class="t" x="68" y="300" style="text-anchor:start">https://app.example.com:8080</text>
+            <text class="l" x="68" y="319" style="text-anchor:start">cross-origin: the port differs</text>
+          </svg>
+          <figcaption>Highlighted: row 3, because a sibling subdomain is a stranger too, and that surprises people most.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> Your page's home address (<code>origin</code>) has three parts: the protocol (<code>scheme</code>), the machine name (<code>host</code>) and the <code>port</code>. Change any one and the browser treats the other side as a <strong>stranger</strong>. The path never counts.</p>
+          <p class="hood"><strong>Under the hood.</strong> Row 1 matches, because the path is not part of the origin. Rows 2–4 each change one part, so a <code>fetch()</code> to them is cross-origin. <code>https://</code> implies port <code>443</code>, so the <code>8080</code> in row 4 does not match.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>The browser sends the request, then checks the reply.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 400 386" role="img" aria-label="Sequence: your script calls fetch; the browser sends GET /orders to the API with an Origin header; the API replies 200 OK with an Access-Control-Allow-Origin header; the browser compares the two and hands the reply to the script only on a match, otherwise fetch fails with a TypeError.">
+            <use href="#ico-robot" x="22" y="4" width="52" height="52"/>
+            <use href="#ico-browser" x="134" y="4" width="52" height="52"/>
+            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
+            <text class="n" x="48" y="74">Your script</text><text class="t" x="48" y="90">fetch()</text>
+            <text class="n" x="160" y="74">Doorman</text><text class="t" x="160" y="90">browser</text>
+            <text class="n" x="340" y="74">The API</text><text class="t" x="340" y="90">api.example.com</text>
+            <line class="life" x1="48" y1="100" x2="48" y2="372"/><line class="life" x1="160" y1="100" x2="160" y2="372"/><line class="life" x1="340" y1="100" x2="340" y2="372"/>
+
+            <circle class="num-bg" cx="16" cy="126" r="9"/><text class="num" x="16" y="130">1</text>
+            <line class="wire" x1="50" y1="126" x2="156" y2="126" marker-end="url(#arrow)"/>
+            <text class="t" x="104" y="117">fetch(url)</text>
+
+            <circle class="num-bg" cx="16" cy="178" r="9"/><text class="num" x="16" y="182">2</text>
+            <line class="wire" x1="162" y1="178" x2="336" y2="178" marker-end="url(#arrow)"/>
+            <text class="l" x="250" y="170">GET /orders</text>
+            <text class="t" x="250" y="197" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Origin: https://app.example.com</text>
+
+            <circle class="num-bg" cx="16" cy="246" r="9"/><text class="num" x="16" y="250">3</text>
+            <line class="wire" x1="338" y1="246" x2="164" y2="246" marker-end="url(#arrow)"/>
+            <use href="#ico-list" x="272" y="229" width="34" height="34"/>
+            <text class="l" x="210" y="238">200 OK</text>
+            <text class="t" x="250" y="280" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Access-Control-Allow-Origin:</text>
+            <text class="t" x="250" y="297" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">https://app.example.com</text>
+
+            <circle class="num-bg" cx="16" cy="330" r="9"/><text class="num" x="16" y="334">4</text>
+            <line class="hot" x1="158" y1="330" x2="52" y2="330" marker-end="url(#arrow-hl)"/>
+            <text class="l h" x="104" y="321">match: hand over</text>
+            <ellipse class="pen" cx="104" cy="318" rx="64" ry="18" transform="rotate(-4 104 318)"/>
+            <line class="wire cut" x1="158" y1="356" x2="52" y2="356" marker-end="url(#arrow)"/>
+            <text class="l" x="104" y="377">no match: TypeError</text>
+          </svg>
+          <figcaption>Highlighted: step 4, because the browser decides only after the server has answered.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> The doorman (<code>browser</code>) lets your request leave. When the reply comes back, it reads the <strong>guest list</strong> first. Your script sees the reply only if your origin is on that list.</p>
+          <p class="hood"><strong>Under the hood.</strong> In step 2 the browser adds <code>Origin: https://app.example.com</code> itself; your code cannot change it. In step 3 the server sets <code>Access-Control-Allow-Origin</code> to that exact origin or to <code>*</code>. In step 4 a mismatch makes <code>fetch()</code> reject with a <code>TypeError</code>, and only the console says why.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>A risky request calls ahead with <code>OPTIONS</code> first.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 400 392" role="img" aria-label="Sequence: your script asks for a PUT with a JSON body; the browser first sends OPTIONS /orders with Access-Control-Request-Method: PUT; the API replies 204 No Content with Access-Control-Allow-Methods: PUT; only then does the browser send the real PUT, and the 200 OK reply goes back to your script after the guest-list check.">
+            <use href="#ico-robot" x="22" y="4" width="52" height="52"/>
+            <use href="#ico-browser" x="134" y="4" width="52" height="52"/>
+            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
+            <text class="n" x="48" y="74">Your script</text><text class="t" x="48" y="90">fetch()</text>
+            <text class="n" x="160" y="74">Doorman</text><text class="t" x="160" y="90">browser</text>
+            <text class="n" x="340" y="74">The API</text><text class="t" x="340" y="90">api.example.com</text>
+            <line class="life" x1="48" y1="100" x2="48" y2="380"/><line class="life" x1="160" y1="100" x2="160" y2="380"/><line class="life" x1="340" y1="100" x2="340" y2="380"/>
+
+            <circle class="num-bg" cx="16" cy="126" r="9"/><text class="num" x="16" y="130">1</text>
+            <line class="wire" x1="50" y1="126" x2="156" y2="126" marker-end="url(#arrow)"/>
+            <text class="l" x="104" y="117">PUT + JSON</text>
+
+            <circle class="num-bg" cx="16" cy="184" r="9"/><text class="num" x="16" y="188">2</text>
+            <line class="hot" x1="162" y1="184" x2="336" y2="184" marker-end="url(#arrow-hl)"/>
+            <use href="#ico-letter" x="172" y="167" width="34" height="34"/>
+            <text class="l h" x="268" y="175">OPTIONS /orders</text>
+            <ellipse class="pen" cx="268" cy="171" rx="68" ry="17" transform="rotate(-4 268 171)"/>
+            <text class="t" x="250" y="210" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Access-Control-Request-Method: PUT</text>
+
+            <circle class="num-bg" cx="16" cy="252" r="9"/><text class="num" x="16" y="256">3</text>
+            <line class="wire" x1="338" y1="252" x2="164" y2="252" marker-end="url(#arrow)"/>
+            <text class="l" x="250" y="244">204 No Content</text>
+            <text class="t" x="250" y="276" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Access-Control-Allow-Methods: PUT</text>
+
+            <circle class="num-bg" cx="16" cy="316" r="9"/><text class="num" x="16" y="320">4</text>
+            <line class="wire" x1="162" y1="316" x2="336" y2="316" marker-end="url(#arrow)"/>
+            <text class="l" x="250" y="308">PUT /orders</text>
+
+            <circle class="num-bg" cx="16" cy="362" r="9"/><text class="num" x="16" y="366">5</text>
+            <line class="wire" x1="338" y1="362" x2="52" y2="362" marker-end="url(#arrow)"/>
+            <text class="l" x="200" y="354">200 OK, guest list checked</text>
+          </svg>
+          <figcaption>Highlighted: step 2, because the real <code>PUT</code> waits until the server says yes.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> Some requests could change data on a server that never expected them. So the browser <strong>calls ahead</strong> (<code>preflight</code>) and asks: may this origin send a <code>PUT</code> with JSON? Only a yes lets the real request out.</p>
+          <p class="hood"><strong>Under the hood.</strong> A <code>PUT</code>, a JSON body or an <code>Authorization</code> header triggers step 2; plain <code>GET</code>s and form posts skip it. In step 3 the server answers with <code>Access-Control-Allow-Methods</code>, <code>Access-Control-Allow-Headers</code> and the guest list. The browser caches that yes for <code>Access-Control-Max-Age</code> seconds (5 by default), so each miss costs one extra round trip.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>With cookies, the guest list must name you exactly.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 400 312" role="img" aria-label="Your script sends a request with credentials: 'include', so your cookie travels to the API. Two possible replies: Access-Control-Allow-Origin: * is blocked, while the exact origin https://app.example.com together with Access-Control-Allow-Credentials: true is allowed.">
+            <use href="#ico-robot" x="22" y="4" width="52" height="52"/>
+            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
+            <text class="n" x="48" y="74">Your script</text><text class="t" x="48" y="90">fetch()</text>
+            <text class="n" x="340" y="74">The API</text><text class="t" x="340" y="90">api.example.com</text>
+            <line class="wire" x1="80" y1="30" x2="308" y2="30" marker-end="url(#arrow)"/>
+            <use href="#ico-key" x="176" y="13" width="34" height="34"/>
+            <text class="l" x="194" y="62">with your cookie</text>
+            <text class="t" x="194" y="82">credentials: 'include'</text>
+
+            <rect class="box" x="56" y="108" width="336" height="66" rx="6"/>
+            <use href="#ico-stop" x="6" y="121" width="40" height="40"/>
+            <text class="t" x="70" y="134" style="text-anchor:start">Access-Control-Allow-Origin: *</text>
+            <ellipse class="pen" cx="300" cy="129" rx="15" ry="14" transform="rotate(-6 300 129)"/>
+            <text class="l" x="70" y="160" style="text-anchor:start">wildcard: blocked when cookies ride along</text>
+
+            <rect class="box" x="56" y="190" width="336" height="110" rx="6"/>
+            <use href="#ico-check" x="6" y="225" width="40" height="40"/>
+            <text class="t" x="70" y="214" style="text-anchor:start">Access-Control-Allow-Origin:</text>
+            <text class="t" x="86" y="232" style="text-anchor:start">https://app.example.com</text>
+            <text class="t" x="70" y="256" style="text-anchor:start">Access-Control-Allow-Credentials: true</text>
+            <text class="l" x="70" y="284" style="text-anchor:start">exact origin + true: allowed</text>
+          </svg>
+          <figcaption>Highlighted: the <code>*</code>, because a wildcard never lets a reply with cookies through.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> By default the browser leaves your cookies out of cross-origin calls. Ask for them (<code>credentials: 'include'</code>) and the rules get stricter. The server must name your <strong>exact</strong> origin and say yes to cookies.</p>
+          <p class="hood"><strong>Under the hood.</strong> The reply needs your exact origin in <code>Access-Control-Allow-Origin</code> plus <code>Access-Control-Allow-Credentials: true</code>. With <code>*</code>, the browser blocks the reply. A server for many origins checks the request's <code>Origin</code> against an allowlist and echoes the match back.</p>
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <section class="catch">
+    <div class="wrap">
+      <h2>CORS hides the reply. It does not stop the request.</h2>
+      <p>A simple <code>POST</code> reaches the server and runs before the browser checks any header. Guard routes that change data with auth and CSRF tokens, not with CORS.</p>
+    </div>
+  </section>
+
+  <section class="wrap further">
+    <h2>Push further</h2>
+    <details><summary>Why does it work in curl but fail in the browser?</summary><p>CORS is a browser rule that protects the user's logged-in data. curl has no page origin and no user to protect, so it never reads these headers.</p></details>
+    <details><summary>Can I fix a CORS error from the frontend?</summary><p>No. <code>mode: 'no-cors'</code> only returns an opaque reply your code cannot read, so fix the server's headers or call a same-origin proxy.</p></details>
+    <details><summary>What breaks when a CDN caches the reply?</summary><p>If the server echoes the request's <code>Origin</code>, a CDN can hand origin A's guest list to origin B. Send <code>Vary: Origin</code> so the cache keeps one copy per origin.</p></details>
+  </section>
+
+  <footer class="wrap colophon">
+    <p><strong>Simplified on purpose.</strong> Left out <code>Access-Control-Expose-Headers</code>, redirects, opaque responses and Private Network Access.</p>
+    <p>Sources: <a href="https://fetch.spec.whatwg.org/#http-cors-protocol">the Fetch Standard, CORS protocol</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">MDN's CORS guide</a>. Checked against MDN: the simple-request rules, the 5-second <code>Max-Age</code> default, the cookie rules and <code>Vary: Origin</code>. The <code>TypeError</code> name and the <code>no-cors</code> behavior are not verified.</p>
+  </footer>
+</main>
+</body>
+</html>

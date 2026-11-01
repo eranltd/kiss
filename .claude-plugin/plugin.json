@@ -1,0 +1,13 @@
+{
+  "name": "kiss",
+  "version": "1.0.0",
+  "description": "Keep it simple: explain any tech topic to a developer as one plain HTML page with one everyday metaphor, a few picture steps and very few words. Use /kiss <topic>.",
+  "author": {
+    "name": "Eran Peled",
+    "url": "https://github.com/eranltd"
+  },
+  "homepage": "https://github.com/eranltd/kiss",
+  "repository": "https://github.com/eranltd/kiss",
+  "license": "MIT",
+  "keywords": ["explain", "kiss", "explainer", "developer", "learning", "html", "diagram"]
+}
