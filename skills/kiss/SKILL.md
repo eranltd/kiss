@@ -55,7 +55,7 @@ Count prose as all visible text in the body except SVGs and `<pre>` blocks. Code
 Draw for a reader with a photographic memory: they should recall the page as pictures.
 
 - **Draw with the cast.** The template's sprite holds hand-drawn characters: `ico-browser`, `ico-server`, `ico-person`, `ico-phone`, `ico-robot` (actors, with faces), and `ico-db`, `ico-letter`, `ico-key`, `ico-lock`, `ico-list`, `ico-clock`, `ico-cloud`, `ico-gear`, `ico-box`, `ico-shield`, `ico-bolt`, `ico-stop`, `ico-check`. Place one with `<use href="#ico-server" x y width height/>`.
-- **One character per actor, all page long.** The same character and color in the strip and in every drawing: on top of its lifeline in a flow, beside its part in a layout or a state picture. Recolor with `style="--fill:var(--c-pink)"` only to tell two of a kind apart.
+- **One character per actor, all page long.** The same character and color in the strip and in every drawing: on top of its lifeline in a flow, beside its part in a layout or a state picture. Recolor with `style="--fill:var(--c-pink)"` only to tell two of a kind apart. When an actor changes role (a follower becomes the leader), color by role and say so in the caption.
 - **One picture per zoom that a reader could recall with closed eyes**: the letter with a stamp, the lock on the door, the stop sign on the reply.
 - If the cast lacks an object, draw it the same way: a 64×64 `<symbol>`, the `o` outline class, one crayon fill, a face only for an actor.
 - **Red pen marks what matters.** One per drawing: a `.pen` ellipse around it, tilted a few degrees, and `.hot` with `url(#arrow-hl)` for its path when it has one; both mark the same thing. Everything else stays ink. Keep 20 units free at the drawing's edges so the pen is not clipped.
@@ -64,7 +64,7 @@ Draw for a reader with a photographic memory: they should recall the page as pic
 - Keep real names short in drawings and in the strip (about 16 characters: `ACAO header`, `Origin`). Give the full name in the words.
 - Text is centered. Add `class="… start"` or `"… end"` to align a label left or right.
 - Label a store or outside system with why it is there: "Redis · locks, 30-day TTL".
-- **Fit a phone.** A `viewBox` 400 units wide, at most 3 actors across, labels at 13 units or larger. With more actors, stack the flow top to bottom.
+- **Fit a phone.** A `viewBox` 400 units wide, at most 3 actors across, labels at 13 units or larger. With more actors, stack the flow top to bottom, or draw 3 and say in the footer what the real system has ("Raft clusters usually run five servers").
 - `role="img"` and a full-sentence `aria-label` on every drawing. Use the template's shared markers and filter; do not define ids inside a drawing.
 
 ## Words

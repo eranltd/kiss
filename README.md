@@ -37,7 +37,7 @@ Ask about code in your project and it reads the code first, then uses the real f
 
 The page is a single HTML file: no framework, light and dark mode, phone-friendly. If your Claude can publish artifacts, it publishes one. Otherwise it saves `kiss-<topic>.html`.
 
-See [examples/](examples/) for the same topic at two depths: [`how-cors-works.html`](examples/how-cors-works.html) and [`how-cors-works-deep.html`](examples/how-cors-works-deep.html).
+See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)) and Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)).
 
 <img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a preflight sequence diagram that fits the screen" width="320">
 
