@@ -37,6 +37,8 @@ Ask about code in your project and it reads the code first, then uses the real f
 
 The page is a single HTML file: no framework, light and dark mode, phone-friendly. If your Claude can publish artifacts, it publishes one. Otherwise it saves `kiss-<topic>.html`.
 
+The skill ships a reference page, [`skills/kiss/example.html`](skills/kiss/example.html) (how an email reaches an inbox), that sets the drawing bar for every run.
+
 See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)) Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)) and DNS ([`how-dns-works.html`](examples/how-dns-works.html)).
 
 <img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a preflight sequence diagram that fits the screen" width="320">

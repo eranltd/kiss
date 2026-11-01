@@ -55,31 +55,34 @@ pre code{background:none;padding:0;font-size:inherit}
 /* The glance: the route as pills, a character in each; the deciding stop is stamped. */
 .cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
 .cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
-.cast li+li::before{content:"→";position:absolute;left:-25px;top:50%;transform:translateY(-50%);width:auto;height:auto;background:none;-webkit-mask:none;mask:none;color:var(--muted);font:400 16px/1 var(--mono)}
+.cast li+li::before{content:none}
+.cast li:not(:last-child)::after{content:"→";position:absolute;right:-25px;left:auto;top:50%;bottom:auto;inset:auto -25px auto auto;width:auto;height:auto;border:0;border-radius:0;transform:translateY(-50%);background:none;color:var(--muted);font:400 16px/1 var(--mono);pointer-events:none}
 .cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
 .cast b{font-weight:700}
 .cast code{background:none;padding:0;color:var(--muted);font-size:12px}
 .cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
-.cast li.hl::after{content:none}
+.cast li.hl:last-child::after{content:none}
 @media (max-width:40rem){
   .cast{flex-direction:column;align-items:flex-start;gap:26px}
   .cast li{display:inline-flex;grid-template-columns:none;width:auto}
   .cast li .ico{grid-row:auto;width:30px;height:30px}
   .cast li>:not(.ico){grid-column:auto}
-  .cast li+li::before{content:"↓";left:20px;top:-22px;transform:none;width:auto;height:auto}
+  .cast li:not(:last-child)::after{content:"↓";inset:auto auto -24px 20px;transform:none}
 }
 .caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
 .glance-words{margin:0}
 
-/* Zooms: stamped steps, picture card left, words right; dashed seams between. */
+/* Zooms: picture card left; stamp, claim and words right; dashed seams between. */
 .zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
-.zoom{counter-increment:zoom;display:grid;gap:18px;padding:0}
+.zoom{counter-increment:zoom;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"pic head" "pic words";column-gap:40px;row-gap:14px;align-content:center;padding:0}
 .zoom::before{content:none}
 .zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
-.zoom h2{display:flex;align-items:center;gap:14px;position:static;grid-column:auto}
-.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:rotate(-3deg)}
-.zoom-body{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:36px;align-items:center}
-@media (max-width:760px){.zoom-body{grid-template-columns:minmax(0,1fr);gap:20px}}
+.zoom-body{display:contents}
+.zoom h2{grid-area:head;align-self:end;display:flex;align-items:center;gap:14px;position:static}
+.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:none}
+.zoom .drawing{grid-area:pic;align-self:center}
+.zoom .words{grid-area:words;align-self:start}
+@media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
 .drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
 .drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
 .drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
@@ -97,6 +100,14 @@ pre code{background:none;padding:0;font-size:inherit}
 .pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
 .pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
 
+/* Scene paint: flat fills and thick ink, from the tokens. */
+.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-line{stroke:var(--rule)}
+.f-surface{fill:var(--paper)} .f-bg{fill:var(--bg)} .f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-line{fill:var(--rule)}
+.f-accent{fill:var(--accent)} .f-yes{fill:var(--yes)} .f-no{fill:var(--no)} .f-blue{fill:var(--blue)}
+.svg-t{font:400 12px var(--mono);fill:var(--ink)}
+.svg-tm{font:400 11px var(--mono);fill:var(--muted)}
+.svg-tb{font:700 15px var(--display);fill:var(--ink)}
+.svg-ta{font:700 14px var(--display);fill:var(--accent-ink)}
 /* SVG paint comes from tokens, so dark mode follows. */
 .o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .dot{fill:var(--ink)}
@@ -165,7 +176,8 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
   <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
   <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
-  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--accent)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--no)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-laptop" viewBox="0 0 64 64"><rect class="o" x="12" y="12" width="40" height="30" rx="4" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M5 50h54l-5-8H10z" style="fill:var(--fill,var(--c-gray))"/><circle class="dot" cx="26" cy="25" r="2.3"/><circle class="dot" cx="38" cy="25" r="2.3"/><path class="o" d="M27 32q5 3.5 10 0"/></symbol>
   <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
   <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
   <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
@@ -185,7 +197,7 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <symbol id="ico-bell" viewBox="0 0 64 64"><path class="o" d="M18 44c3-4 4-8 4-15a10 10 0 0 1 20 0c0 7 1 11 4 15z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M14 44h36M28 50a4 4 0 0 0 8 0M32 9v4M8 22l5 3M56 22l-5 3"/></symbol>
   <symbol id="ico-bin" viewBox="0 0 64 64"><path class="o" d="M16 20h32l-3 36H19z" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M11 20h42M26 20v-6h12v6M26 28v20M32 28v20M38 28v20"/></symbol>
   <symbol id="ico-door" viewBox="0 0 64 64"><path class="o" d="M16 58V12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v46z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M10 58h44"/><circle class="dot" cx="41" cy="35" r="2.6"/></symbol>
-  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--accent)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
+  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--no)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
   <symbol id="ico-search" viewBox="0 0 64 64"><circle class="o" cx="27" cy="27" r="16" style="fill:var(--fill,var(--paper))"/><path class="o" d="M39 39l15 15" style="stroke-width:5"/><path class="o" d="M19 23a9 9 0 0 1 7-6"/></symbol>
   <symbol id="ico-switch-on" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-green))"/><circle class="o" cx="45" cy="32" r="9" style="fill:var(--paper)"/></symbol>
   <symbol id="ico-switch-off" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="19" cy="32" r="9" style="fill:var(--paper)"/></symbol>
@@ -211,24 +223,29 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
       <h2>A headline that makes one claim.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 290" role="img" aria-label="A full sentence that says what the drawing shows, in the order it happens.">
-            <use href="#ico-browser" x="34" y="4" width="52" height="52"/>
-            <use href="#ico-list" x="174" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
-            <text class="n" x="60" y="74">Plain name</text><text class="t" x="60" y="90">real_term</text>
-            <text class="n" x="200" y="74">Plain name</text><text class="t" x="200" y="90">real_term</text>
-            <text class="n" x="340" y="74">Plain name</text><text class="t" x="340" y="90">real_term</text>
-            <line class="life" x1="60" y1="100" x2="60" y2="282"/><line class="life" x1="200" y1="100" x2="200" y2="282"/><line class="life" x1="340" y1="100" x2="340" y2="282"/>
-            <circle class="num-bg" cx="20" cy="132" r="9"/><text class="num" x="20" y="136">1</text>
-            <line class="wire" x1="62" y1="132" x2="336" y2="132" marker-end="url(#arrow)"/><text class="l" x="200" y="124">message</text>
-            <circle class="num-bg" cx="20" cy="186" r="9"/><text class="num" x="20" y="190">2</text>
-            <line class="wire" x1="338" y1="186" x2="64" y2="186" marker-end="url(#arrow)"/><text class="l" x="270" y="178">reply</text>
-            <circle class="num-bg" cx="20" cy="242" r="9"/><text class="num" x="20" y="246">3</text>
-            <line class="hot" x1="62" y1="242" x2="196" y2="242" marker-end="url(#arrow-hl)"/><text class="l h" x="130" y="234">the check</text>
-            <ellipse class="pen" cx="130" cy="236" rx="62" ry="19" transform="rotate(-4 130 236)"/>
-            <line class="wire cut" x1="200" y1="262" x2="64" y2="262" marker-end="url(#arrow)"/>
+          <!-- A scene: 1–3 big objects doing the step, flat fills, thick ink, dashed curves. The one thing that matters is the yellow one. -->
+          <svg viewBox="0 0 340 220" role="img" aria-label="A full sentence that says what the scene shows: a phone with a Continue button sends two letters.">
+            <rect x="34" y="14" width="118" height="192" rx="20" class="f-surface s-ink" stroke-width="3"/>
+            <rect x="46" y="36" width="94" height="146" rx="8" class="f-bg"/>
+            <rect x="56" y="52" width="74" height="8" rx="4" class="f-line"/>
+            <rect x="56" y="68" width="56" height="8" rx="4" class="f-line"/>
+            <rect x="56" y="84" width="66" height="8" rx="4" class="f-line"/>
+            <rect x="56" y="140" width="74" height="28" rx="14" class="f-accent"/>
+            <text x="93" y="159" text-anchor="middle" class="svg-ta">Continue</text>
+            <path d="M152 120 C190 100, 200 70, 236 60" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <path d="M152 140 C196 150, 206 160, 236 152" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <g transform="translate(238 38)">
+              <rect width="78" height="48" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+              <path d="M3 4 L39 28 L75 4" fill="none" class="s-ink" stroke-width="2.5"/>
+              <text x="39" y="66" text-anchor="middle" class="svg-tm">real_term</text>
+            </g>
+            <g transform="translate(238 128)">
+              <rect width="78" height="48" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+              <path d="M3 4 L39 28 L75 4" fill="none" class="s-ink" stroke-width="2.5"/>
+              <text x="39" y="66" text-anchor="middle" class="svg-tm">real_term</text>
+            </g>
           </svg>
-          <figcaption>Highlighted: step 3, because it is where the answer is decided.</figcaption>
+          <figcaption>Yellow: the part that decides, and why.</figcaption>
         </figure>
         <div class="words">
           <p><strong>In plain words.</strong> One to three short sentences. The plain word first, then the real term (<code>real-name</code>).</p>

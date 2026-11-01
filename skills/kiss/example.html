@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How an Email Travels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a post-office story told top to bottom. The hero names the route as pills; each zoom is a stamped step, picture card left, few words right. */
+:root{
+  --bg:#F2F5F9; --paper:#FFFFFF; --paper-2:#E8EEF6; --ink:#15223A; --ink-2:#33415C; --muted:#586982; --rule:#CAD4E2;
+  --accent:#E5B012; --accent-ink:#2E2300; --hot:#15223A; --yes:#188F6F; --no:#C9414F; --blue:#2D68D2;
+  --c-blue:#CFE0FB; --c-green:#CDEBDD; --c-yellow:#FBE7A6; --c-pink:#F8D3D8; --c-gray:#E3E8F0;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --serif:var(--body); --sans:var(--body);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
+  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
+  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
+  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
+  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0}
+html,body{overflow-x:clip}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+main{max-width:1060px;margin:0 auto;padding-inline:20px;padding-block:40px 72px;display:grid;gap:56px}
+.wrap{display:block;max-width:none;margin:0;padding:0;grid-template-columns:none}
+.wrap>*{grid-column:auto;min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;overflow-wrap:break-word;letter-spacing:-.01em}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800;line-height:1.02;max-width:20ch}
+h2{font-size:clamp(24px,3.2vw,32px);font-weight:700;line-height:1.12;max-width:none}
+p{max-width:62ch;text-wrap:pretty}
+strong{font-weight:700}
+a{color:var(--blue);text-decoration-color:currentColor}
+a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+code{font:400 .82em/1.3 var(--mono);background:color-mix(in srgb,var(--blue) 10%,transparent);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+pre{font:400 13px/1.5 var(--mono);background:color-mix(in srgb,var(--blue) 8%,var(--paper));border:1px solid var(--rule);border-radius:8px;padding:10px 12px;overflow-x:auto;max-width:100%;margin:0}
+pre code{background:none;padding:0;font-size:inherit}
+
+.hero{display:grid;gap:14px;padding:0}
+.lede{font-size:20px;line-height:1.5;color:var(--muted);max-width:60ch;margin:0}
+.lede b,.lede strong{color:var(--ink)}
+
+/* The glance: the route as pills, a character in each; the deciding stop is stamped. */
+.cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
+.cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
+.cast li+li::before{content:none}
+.cast li:not(:last-child)::after{content:"→";position:absolute;right:-25px;left:auto;top:50%;bottom:auto;inset:auto -25px auto auto;width:auto;height:auto;border:0;border-radius:0;transform:translateY(-50%);background:none;color:var(--muted);font:400 16px/1 var(--mono);pointer-events:none}
+.cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
+.cast b{font-weight:700}
+.cast code{background:none;padding:0;color:var(--muted);font-size:12px}
+.cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
+.cast li.hl:last-child::after{content:none}
+@media (max-width:40rem){
+  .cast{flex-direction:column;align-items:flex-start;gap:26px}
+  .cast li{display:inline-flex;grid-template-columns:none;width:auto}
+  .cast li .ico{grid-row:auto;width:30px;height:30px}
+  .cast li>:not(.ico){grid-column:auto}
+  .cast li:not(:last-child)::after{content:"↓";inset:auto auto -24px 20px;transform:none}
+}
+.caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
+.glance-words{margin:0}
+
+/* Zooms: picture card left; stamp, claim and words right; dashed seams between. */
+.zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
+.zoom{counter-increment:zoom;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"pic head" "pic words";column-gap:40px;row-gap:14px;align-content:center;padding:0}
+.zoom::before{content:none}
+.zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
+.zoom-body{display:contents}
+.zoom h2{grid-area:head;align-self:end;display:flex;align-items:center;gap:14px;position:static}
+.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:none}
+.zoom .drawing{grid-area:pic;align-self:center}
+.zoom .words{grid-area:words;align-self:start}
+@media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
+.drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
+.drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
+.drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
+.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:none}
+.words{display:grid;gap:12px;min-width:0}
+.hood{font:400 15px/1.55 var(--body);color:var(--ink-2);border-left:3px solid var(--rule);padding-left:12px}
+.hood strong{color:var(--ink)}
+.hood ol{padding-left:1.2em;display:grid;gap:4px}
+.hood>*+*{margin-top:6px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font:400 12.5px/1.4 var(--mono);color:var(--muted);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;overflow-wrap:anywhere}
+.big{font:700 21px/1.3 var(--display);border-left:4px solid var(--accent);padding-left:14px;max-width:40ch}
+.pill{display:inline-block;font:600 12px/1.6 var(--mono);color:var(--ink);border-radius:999px;padding:0 9px;white-space:nowrap}
+.pill.yes{background:color-mix(in srgb,var(--yes) 16%,transparent);color:var(--yes)}
+.pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
+.pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
+
+/* Scene paint: flat fills and thick ink, from the tokens. */
+.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-line{stroke:var(--rule)}
+.f-surface{fill:var(--paper)} .f-bg{fill:var(--bg)} .f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-line{fill:var(--rule)}
+.f-accent{fill:var(--accent)} .f-yes{fill:var(--yes)} .f-no{fill:var(--no)} .f-blue{fill:var(--blue)}
+.svg-t{font:400 12px var(--mono);fill:var(--ink)}
+.svg-tm{font:400 11px var(--mono);fill:var(--muted)}
+.svg-tb{font:700 15px var(--display);fill:var(--ink)}
+.svg-ta{font:700 14px var(--display);fill:var(--accent-ink)}
+/* SVG paint comes from tokens, so dark mode follows. */
+.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.dot{fill:var(--ink)}
+.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+.wire{stroke:var(--muted);stroke-width:2;fill:none;stroke-linecap:round}
+.hot{stroke:var(--hot);stroke-width:3;fill:none;stroke-linecap:round}
+.cut{stroke-dasharray:6 6}
+.life{stroke:var(--rule);stroke-width:1.5;stroke-dasharray:3 6;stroke-linecap:round}
+.pen{fill:var(--accent);fill-opacity:.38;stroke:none}
+.n{font:700 15px var(--display);fill:var(--ink);text-anchor:middle}
+.t{font:400 12.5px var(--mono);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.l{font:400 13.5px var(--body);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.l.h{fill:var(--ink);font-weight:700}
+.start{text-anchor:start}
+.end{text-anchor:end}
+.num-bg{fill:var(--ink)}
+.num{font:700 11px var(--mono);fill:var(--paper);text-anchor:middle}
+.tip{fill:var(--muted)}
+.tip-hot{fill:var(--hot)}
+
+/* The catch: the one boxed note on the page. */
+.catch{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:18px;padding:22px}
+.catch .wrap{display:grid;gap:10px}
+.catch h2{font-size:26px;line-height:1.15;max-width:none}
+.catch p{margin:0;max-width:62ch}
+.catch code{background:color-mix(in srgb,var(--blue) 10%,transparent)}
+
+.further{padding:0;display:grid;gap:0}
+.further h2{margin-bottom:12px}
+.further details{border-top:1px solid var(--rule);padding-block:12px;max-width:none}
+.further details:last-child{border-bottom:1px solid var(--rule)}
+.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:700 16px/1.45 var(--body)}
+.further summary::-webkit-details-marker{display:none}
+.further summary::before{content:"+";font-family:var(--mono);color:var(--muted)}
+.further details[open] summary::before{content:"−"}
+.further details p{font:400 15px/1.55 var(--body);color:var(--ink-2);margin:6px 0 0 1.5rem}
+
+/* Decision pages: two cards and a table. */
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.compare>*{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;background:var(--paper);display:grid;gap:6px}
+.compare>.pick{border:2px dashed var(--accent)}
+.compare h3{margin:0;font:600 12px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.compare p{font-size:15px;color:var(--ink-2)}
+@media (max-width:760px){.compare{grid-template-columns:minmax(0,1fr)}}
+.table{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font:400 15px/1.45 var(--body);font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+.colophon{padding:0;font:400 14px/1.6 var(--body);color:var(--muted)}
+.colophon p+p{margin-top:6px}
+.colophon strong{color:var(--ink)}
+@media (max-width:760px){body{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<!-- The cast. Actors have faces; objects do not. Recolor one use with style="--fill:var(--c-pink)". If the cast lacks something, draw it the same way: 64×64, class "o" outline, one crayon fill, a face only for an actor. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--hot)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <symbol id="ico-browser" viewBox="0 0 64 64"><rect class="o" x="6" y="10" width="52" height="44" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M6 21h52"/><circle class="dot" cx="13" cy="15.5" r="1.8"/><circle class="dot" cx="19" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="34" r="2.6"/><circle class="dot" cx="39" cy="34" r="2.6"/><path class="o" d="M26 42q6 5 12 0"/></symbol>
+  <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
+  <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
+  <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
+  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--no)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-laptop" viewBox="0 0 64 64"><rect class="o" x="12" y="12" width="40" height="30" rx="4" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M5 50h54l-5-8H10z" style="fill:var(--fill,var(--c-gray))"/><circle class="dot" cx="26" cy="25" r="2.3"/><circle class="dot" cx="38" cy="25" r="2.3"/><path class="o" d="M27 32q5 3.5 10 0"/></symbol>
+  <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
+  <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
+  <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
+  <symbol id="ico-lock" viewBox="0 0 64 64"><path class="o" d="M21 29v-8a11 11 0 0 1 22 0v8"/><rect class="o" x="13" y="29" width="38" height="28" rx="5" style="fill:var(--fill,var(--c-yellow))"/><circle class="dot" cx="32" cy="40" r="3"/><path class="o" d="M32 42v6"/></symbol>
+  <symbol id="ico-list" viewBox="0 0 64 64"><rect class="o" x="12" y="10" width="40" height="49" rx="5" style="fill:var(--fill,var(--paper))"/><rect class="o" x="23" y="5" width="18" height="9" rx="3" style="fill:var(--c-gray)"/><path class="o" d="M19 27l3 3 5-6M32 27h13M19 39l3 3 5-6M32 39h13M21 50h4M32 50h13"/></symbol>
+  <symbol id="ico-clock" viewBox="0 0 64 64"><circle class="o" cx="32" cy="33" r="23" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 19v14l9 6M26 6h12"/></symbol>
+  <symbol id="ico-cloud" viewBox="0 0 64 64"><path class="o" d="M19 49h29a11 11 0 0 0 1-22 15 15 0 0 0-29-3 12.5 12.5 0 0 0-1 25z" style="fill:var(--fill,var(--c-blue))"/></symbol>
+  <symbol id="ico-gear" viewBox="0 0 64 64"><circle cx="32" cy="32" r="21" fill="none" stroke="var(--ink)" stroke-width="8" stroke-dasharray="5.5 5.5"/><circle class="o" cx="32" cy="32" r="17" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="32" cy="32" r="5.5" style="fill:var(--paper)"/></symbol>
+  <symbol id="ico-box" viewBox="0 0 64 64"><path class="o" d="M10 22l22-11 22 11v24L32 57 10 46z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M10 22l22 11 22-11M32 33v24"/></symbol>
+  <symbol id="ico-shield" viewBox="0 0 64 64"><path class="o" d="M32 5l21 7v16c0 14-9 24-21 31C20 52 11 42 11 28V12z" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M23 32l6 6 12-13"/></symbol>
+  <symbol id="ico-bolt" viewBox="0 0 64 64"><path class="o" d="M37 4L14 36h15l-4 24 25-34H35z" style="fill:var(--fill,var(--c-yellow))"/></symbol>
+  <symbol id="ico-stop" viewBox="0 0 64 64"><path class="o" d="M22 6h20l14 14v20L42 54H22L8 40V20z" style="fill:var(--fill,var(--c-pink))"/><path class="o" d="M24 22l16 16M40 22L24 38"/></symbol>
+  <symbol id="ico-check" viewBox="0 0 64 64"><circle class="o" cx="32" cy="32" r="24" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 33l8 8 15-17"/></symbol>
+  <!-- Scene props: the metaphor's objects. -->
+  <symbol id="ico-cabinet" viewBox="0 0 64 64"><rect class="o" x="12" y="5" width="40" height="54" rx="4" style="fill:var(--fill,var(--c-gray))"/><rect class="o" x="17" y="10" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="26" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="42" width="30" height="13" rx="2" style="fill:var(--paper)"/><path class="o" d="M28 16.5h8M28 32.5h8M28 48.5h8"/></symbol>
+  <symbol id="ico-book" viewBox="0 0 64 64"><path class="o" d="M32 15c-6-4-14-5-24-4v40c10-1 18 0 24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 15c6-4 14-5 24-4v40c-10-1-18 0-24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M14 23c5-.5 9 0 13 1.5M14 31c5-.5 9 0 13 1.5M14 39c5-.5 9 0 13 1.5M37 24.5c4-1.5 8-2 13-1.5M37 32.5c4-1.5 8-2 13-1.5"/></symbol>
+  <symbol id="ico-bell" viewBox="0 0 64 64"><path class="o" d="M18 44c3-4 4-8 4-15a10 10 0 0 1 20 0c0 7 1 11 4 15z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M14 44h36M28 50a4 4 0 0 0 8 0M32 9v4M8 22l5 3M56 22l-5 3"/></symbol>
+  <symbol id="ico-bin" viewBox="0 0 64 64"><path class="o" d="M16 20h32l-3 36H19z" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M11 20h42M26 20v-6h12v6M26 28v20M32 28v20M38 28v20"/></symbol>
+  <symbol id="ico-door" viewBox="0 0 64 64"><path class="o" d="M16 58V12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v46z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M10 58h44"/><circle class="dot" cx="41" cy="35" r="2.6"/></symbol>
+  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--no)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
+  <symbol id="ico-search" viewBox="0 0 64 64"><circle class="o" cx="27" cy="27" r="16" style="fill:var(--fill,var(--paper))"/><path class="o" d="M39 39l15 15" style="stroke-width:5"/><path class="o" d="M19 23a9 9 0 0 1 7-6"/></symbol>
+  <symbol id="ico-switch-on" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-green))"/><circle class="o" cx="45" cy="32" r="9" style="fill:var(--paper)"/></symbol>
+  <symbol id="ico-switch-off" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="19" cy="32" r="9" style="fill:var(--paper)"/></symbol>
+</svg>
+
+<main>
+  <header class="wrap hero">
+    <h1>Your server hands it to theirs, and theirs checks the seals.</h1>
+    <p class="lede">You press <b>Send</b> on a note from <code>alice@example.com</code> to <code>bob@example.net</code>. Moments later it sits in Bob's inbox, after two hand-offs and three checks.</p>
+    <ol class="cast" aria-label="The whole flow at a glance">
+      <li><svg class="ico" viewBox="0 0 64 64" aria-hidden="true"><rect class="o" x="9" y="11" width="46" height="34" rx="4" style="fill:var(--paper)"/><rect x="14" y="16" width="36" height="24" rx="2" style="fill:var(--c-blue)"/><rect x="34" y="32" width="12" height="5" rx="2.5" style="fill:var(--blue)"/><path class="o" d="M4 45h56l-4 7H8z" style="fill:var(--rule)"/></svg><b>Your app</b><code>MUA</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-server"/></svg><b>Your post office</b><code>:587</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-search"/></svg><b>Address lookup</b><code>DNS MX</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-server" style="--fill:var(--c-blue)"/></svg><b>Bob's post office</b><code>:25</code></li>
+      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-book" style="--fill:var(--accent)"/></svg><b>Seal check</b><code>SPF · DKIM · DMARC</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-cabinet"/></svg><b>Bob's drawer</b><code>IMAP</code></li>
+    </ol>
+    <p class="caption">Marked: the check at Bob's door, where a letter is let in, sent to Junk or turned away. The drawings below zoom into each part.</p>
+    <p class="glance-words"><strong>In plain words.</strong> Think of two post offices. Your app drops the letter at yours, which looks up Bob's and hands it over. Bob's checks the postmark and the seal, files it in Bob's drawer, and Bob's app reads it there.</p>
+  </header>
+
+  <ol class="zooms">
+    <li class="wrap zoom">
+      <h2>Your app posts the letter at your own post office, with a key.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 340 196" role="img" aria-label="A laptop shows a mail to bob@example.net with a Send button. A letter flies along a dashed arc into the slot of a blue post box marked :587. A yellow key sits in the post box's lock, and your green mail server, mail.example.com, stands behind it.">
+            <rect x="16" y="34" width="132" height="100" rx="10" class="f-surface s-ink" stroke-width="3"/>
+            <rect x="26" y="44" width="112" height="80" rx="4" style="fill:var(--c-blue)"/>
+            <rect x="30" y="50" width="104" height="18" rx="4" class="f-surface"/>
+            <text x="33" y="63" text-anchor="start" class="svg-tm">bob@example.net</text>
+            <rect x="30" y="76" width="84" height="6" rx="3" class="f-surface"/>
+            <rect x="30" y="88" width="62" height="6" rx="3" class="f-surface"/>
+            <rect x="84" y="100" width="48" height="18" rx="9" class="f-blue"/>
+            <text x="108" y="113" text-anchor="middle" class="svg-t" style="fill:var(--paper);font-weight:600">Send</text>
+            <path d="M10 134 H154 L146 146 H18 Z" class="f-line s-ink" stroke-width="3" stroke-linejoin="round"/>
+            <text x="82" y="170" text-anchor="middle" class="svg-tm">mail app · MUA</text>
+            <path d="M150 92 C162 40, 206 26, 226 90" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <g transform="translate(163 33)">
+              <rect width="44" height="28" rx="3" class="f-surface s-ink" stroke-width="2.5"/>
+              <path d="M3 4 L22 16 L41 4" fill="none" class="s-ink" stroke-width="2" stroke-linejoin="round"/>
+            </g>
+            <use href="#ico-server" x="262" y="66" width="84" height="84"/>
+            <path d="M198 146 V86 A30 22 0 0 1 258 86 V146 Z" class="f-blue s-ink" stroke-width="3" stroke-linejoin="round"/>
+            <rect x="210" y="86" width="36" height="8" rx="4" class="f-surface s-ink" stroke-width="2"/>
+            <rect x="212" y="106" width="32" height="18" rx="3" class="f-surface s-ink" stroke-width="2"/>
+            <text x="228" y="119" text-anchor="middle" class="svg-t">:587</text>
+            <path d="M212 146 V164 M244 146 V164" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <path d="M189 132 H214 M201 132 v8 M208 132 v5" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="174" cy="132" r="15" class="f-accent s-ink" stroke-width="3"/>
+            <circle cx="174" cy="132" r="5" class="f-surface s-ink" stroke-width="2"/>
+            <text x="174" y="166" text-anchor="middle" class="svg-t">AUTH</text>
+            <text x="262" y="184" text-anchor="middle" class="svg-tm">mail.example.com</text>
+          </svg>
+          <figcaption>Yellow: the key, because port <code>587</code> takes no mail until you log in.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> Your app never talks to Bob's server. It drops the letter in <strong>your own</strong> post office's box, and the box opens only with your login.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> The app (the <code>MUA</code>) connects to your server's submission port, <code>587</code>, and logs in with <code>SMTP AUTH</code>. By default, the submission server must refuse <code>MAIL</code> from a session that has not logged in.</p></div>
+          <div class="tags"><span class="tag">your app = MUA</span><span class="tag">your post office = MSA</span><span class="tag">post box = port 587</span><span class="tag">key = SMTP AUTH</span></div>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>Your post office looks up Bob's post office in DNS.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 340 208" role="img" aria-label="Your green mail server asks MX? A card pulled up from a blue card file marked DNS is titled example.net and lists two rows: MX 10 mx1.example.net, highlighted yellow, and MX 20 mx2.example.net. A magnifying glass hovers over the yellow row.">
+            <rect x="26" y="20" width="200" height="128" rx="8" class="f-surface s-ink" stroke-width="3"/>
+            <text x="42" y="46" text-anchor="start" class="svg-tb">example.net</text>
+            <path d="M42 56 H210" fill="none" class="s-line" stroke-width="2"/>
+            <rect x="36" y="64" width="180" height="26" rx="6" class="f-accent"/>
+            <text x="46" y="82" text-anchor="start" class="svg-t" style="fill:var(--accent-ink);font-weight:600">MX 10 mx1.example.net</text>
+            <text x="46" y="112" text-anchor="start" class="svg-t">MX 20 mx2.example.net</text>
+            <rect x="14" y="122" width="236" height="74" rx="10" class="f-blue s-ink" stroke-width="3"/>
+            <rect x="102" y="146" width="60" height="26" rx="4" class="f-surface s-ink" stroke-width="2"/>
+            <text x="132" y="164" text-anchor="middle" class="svg-t">DNS</text>
+            <use href="#ico-search" x="191" y="38" width="92" height="92" style="--fill:transparent"/>
+            <text x="298" y="122" text-anchor="middle" class="svg-t">MX?</text>
+            <use href="#ico-server" x="262" y="126" width="72" height="72"/>
+          </svg>
+          <figcaption>Yellow: the <code>MX 10</code> row, because the lowest number is tried first. The numbers are examples.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> Your server reads the part after the <code>@</code> and asks DNS who takes mail for <code>example.net</code>. The answer is a short list, best first.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> Each <code>MX</code> record names a host and a preference. Lower numbers go first, so <code>mx2</code> gets the letter only when <code>mx1</code> does not answer. With no <code>MX</code> record at all, the domain itself is the target (an implicit MX).</p></div>
+<pre><code>$ dig +short MX example.net
+10 mx1.example.net.   # example
+20 mx2.example.net.</code></pre>
+          <div class="tags"><span class="tag">card file = DNS</span><span class="tag">card row = MX record</span></div>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>After one receipt, the letter is Bob's server's job.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 340 188" role="img" aria-label="Your green server, mail.example.com, sends an envelope along a solid arrow to Bob's blue server, mx1.example.net, on port 25. Above the envelope: MAIL FROM and RCPT TO; below it: DATA. A yellow receipt reading 250 OK travels back along a dashed curve.">
+            <use href="#ico-server" x="16" y="56" width="96" height="96"/>
+            <use href="#ico-server" x="228" y="56" width="96" height="96" style="--fill:var(--c-blue)"/>
+            <path d="M276 50 V64" fill="none" class="s-ink" stroke-width="2.5"/>
+            <rect x="254" y="30" width="44" height="22" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+            <text x="276" y="46" text-anchor="middle" class="svg-t">:25</text>
+            <path d="M98 84 H236" fill="none" class="s-ink" stroke-width="2.5" marker-end="url(#arrow)"/>
+            <text x="168" y="52" text-anchor="middle" class="svg-tm">MAIL FROM · RCPT TO</text>
+            <g transform="translate(136 58)">
+              <rect width="64" height="42" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+              <path d="M3 4 L32 25 L61 4" fill="none" class="s-ink" stroke-width="2" stroke-linejoin="round"/>
+              <rect x="46" y="6" width="13" height="15" class="f-blue s-ink" stroke-width="1.5" stroke-dasharray="2 1.5"/>
+            </g>
+            <text x="168" y="118" text-anchor="middle" class="svg-tm">DATA</text>
+            <path d="M246 134 C210 172, 130 172, 96 134" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <path d="M136 144 H204 V174 L198.3 179 L192.7 174 L187 179 L181.3 174 L175.7 179 L170 174 L164.3 179 L158.7 174 L153 179 L147.3 174 L141.7 179 L136 174 Z" class="f-accent s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+            <text x="170" y="164" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-weight:600">250 OK</text>
+            <text x="64" y="172" text-anchor="middle" class="svg-tm">mail.example.com</text>
+            <text x="276" y="172" text-anchor="middle" class="svg-tm">mx1.example.net</text>
+          </svg>
+          <figcaption>Yellow: the <code>250 OK</code> after <code>DATA</code>, because from then on Bob's server is responsible for the letter.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> The two servers talk in short commands on port <code>25</code>. The envelope goes first, then the letter, then a <strong>receipt</strong> comes back.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> <code>MAIL FROM</code> and <code>RCPT TO</code> are the envelope. The <code>From:</code> line Bob sees is inside the letter, sent after <code>DATA</code>. A <code>4xx</code> reply means try later: wait at least 30 minutes between tries, and keep trying for 4–5 days. A <code>5xx</code> reply means no, and Alice gets a bounce.</p></div>
+<pre><code>C: MAIL FROM:&lt;alice@example.com&gt;
+S: 250 OK
+C: RCPT TO:&lt;bob@example.net&gt;
+S: 250 OK
+C: DATA
+S: 354 Start mail input
+C: From: alice@example.com … "."
+S: 250 OK</code></pre>
+          <div class="tags"><span class="tag">front door = port 25 (SMTP)</span><span class="tag">envelope = MAIL FROM + RCPT TO</span><span class="tag">receipt = 250 reply</span></div>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>Bob's server trusts the letter only if the postmark or the seal matches the sender.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 340 226" role="img" aria-label="A sealed envelope from alice@example.com with a blue stamp and a postmark labelled SPF, and a red wax seal labelled DKIM with d=example.com. Beside it, a yellow open rule book labelled _dmarc, p=reject. A dashed line runs from the envelope to a bin that holds a crumpled letter.">
+            <g transform="translate(14 34)">
+              <rect width="184" height="116" rx="6" class="f-surface s-ink" stroke-width="3"/>
+              <path d="M5 6 L92 64 L179 6" fill="none" class="s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+              <g transform="translate(140 10)">
+                <rect width="34" height="40" rx="1" class="f-surface s-ink" stroke-width="2" stroke-dasharray="3 2"/>
+                <rect x="4" y="4" width="26" height="32" class="f-blue"/>
+                <circle cx="12" cy="13" r="4" class="f-surface"/>
+                <path d="M4 36 L13 23 L19 30 L23 25 L30 36 Z" class="f-surface"/>
+              </g>
+              <circle cx="128" cy="30" r="14" fill="none" class="s-muted" stroke-width="2"/>
+              <path d="M146 20 q4 -4 8 0 t8 0 t8 0 t8 0 M146 30 q4 -4 8 0 t8 0 t8 0 t8 0 M146 40 q4 -4 8 0 t8 0 t8 0 t8 0" fill="none" class="s-muted" stroke-width="2"/>
+              <path transform="translate(92 64)" d="M17.2 0.0 L16.4 1.4 L14.4 2.5 L12.6 3.4 L12.2 4.4 L12.9 6.0 L13.9 8.0 L14.1 9.8 L12.8 10.7 L10.6 10.6 L8.6 10.2 L7.4 10.5 L7.0 12.0 L6.7 14.3 L5.8 16.0 L4.4 16.3 L2.7 15.1 L1.2 13.5 L0.0 12.8 L-1.2 13.5 L-2.7 15.1 L-4.4 16.3 L-5.8 16.0 L-6.7 14.3 L-7.0 12.0 L-7.4 10.5 L-8.6 10.2 L-10.6 10.6 L-12.8 10.7 L-14.1 9.8 L-13.9 8.1 L-12.9 6.0 L-12.2 4.4 L-12.6 3.4 L-14.4 2.5 L-16.4 1.4 L-17.2 0.0 L-16.4 -1.4 L-14.4 -2.5 L-12.6 -3.4 L-12.2 -4.4 L-12.9 -6.0 L-13.9 -8.1 L-14.1 -9.8 L-12.8 -10.7 L-10.6 -10.6 L-8.6 -10.2 L-7.4 -10.5 L-7.0 -12.0 L-6.7 -14.3 L-5.8 -16.0 L-4.4 -16.3 L-2.7 -15.1 L-1.2 -13.5 L0.0 -12.8 L1.2 -13.5 L2.7 -15.1 L4.4 -16.3 L5.8 -16.0 L6.7 -14.3 L6.9 -12.0 L7.4 -10.5 L8.6 -10.2 L10.6 -10.6 L12.8 -10.7 L14.1 -9.8 L13.9 -8.0 L12.9 -6.0 L12.2 -4.4 L12.6 -3.4 L14.4 -2.5 L16.4 -1.4Z" class="f-no s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+              <circle cx="92" cy="64" r="8" fill="none" class="s-ink" stroke-width="1.5"/>
+              <text x="114" y="72" text-anchor="start" class="svg-t">DKIM</text>
+              <text x="92" y="100" text-anchor="middle" class="svg-tm">From: alice@example.com</text>
+            </g>
+            <text x="142" y="24" text-anchor="middle" class="svg-t">SPF</text>
+            <text x="106" y="170" text-anchor="middle" class="svg-tm">d=example.com</text>
+            <g transform="translate(212 18) scale(1.8)">
+              <path d="M32 15c-6-4-14-5-24-4v40c10-1 18 0 24 4z" class="f-accent s-ink" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M32 15c6-4 14-5 24-4v40c-10-1-18 0-24 4z" class="f-accent s-ink" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M14 23c5-.5 9 0 13 1.5M14 31c5-.5 9 0 13 1.5M14 39c5-.5 9 0 13 1.5M37 24.5c4-1.5 8-2 13-1.5M37 32.5c4-1.5 8-2 13-1.5" fill="none" class="s-ink" stroke-width="1.4" stroke-linecap="round"/>
+            </g>
+            <text x="270" y="134" text-anchor="middle" class="svg-tm">_dmarc · p=reject</text>
+            <path d="M198 140 C220 146, 232 162, 246 178" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <text x="228" y="176" text-anchor="end" class="svg-tm">fail</text>
+            <g transform="translate(260 156) rotate(-15)">
+              <rect width="26" height="17" rx="2" class="f-surface s-ink" stroke-width="2"/>
+              <path d="M2 3 L13 10 L24 3" fill="none" class="s-ink" stroke-width="1.5"/>
+            </g>
+            <use href="#ico-bin" x="240" y="156" width="64" height="64"/>
+          </svg>
+          <figcaption>Yellow: the DMARC rule book, because it decides what happens to a letter that fails: nothing, Junk or the bin.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> The <strong>postmark</strong> shows which post office posted it. The <strong>wax seal</strong> shows nobody changed it. The <strong>rule book</strong>, written by <code>example.com</code>, says what to do with a fake.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> SPF reads a <code>v=spf1</code> TXT record listing the servers allowed to send for the envelope's domain. DKIM checks the <code>DKIM-Signature</code> header against a public key at <code>&lt;selector&gt;._domainkey.example.com</code>; a changed body breaks it. DMARC (<code>_dmarc.example.com</code>: <code>p=none</code>, <code>quarantine</code> or <code>reject</code>) passes when SPF or DKIM passes <strong>and</strong> its domain matches the <code>From:</code> domain.</p></div>
+          <div class="tags"><span class="tag">postmark = SPF</span><span class="tag">wax seal = DKIM signature</span><span class="tag">rule book = DMARC policy</span><span class="tag">bin = reject</span></div>
+          <p class="big">SPF and DKIM prove some domain. DMARC asks if it is the one in From.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="wrap zoom">
+      <h2>A clerk files it in a drawer, and Bob's app reads it there.</h2>
+      <div class="zoom-body">
+        <figure class="drawing">
+          <svg viewBox="0 0 340 232" role="img" aria-label="A clerk labelled spam filter holds a letter. A solid arrow files it into the yellow INBOX drawer of a gray filing cabinet; a dashed line points to the Junk drawer below. A dashed line labelled IMAP :993 runs from the INBOX drawer to Bob's phone, bob@example.net.">
+            <use href="#ico-person" x="4" y="64" width="88" height="88"/>
+            <g transform="translate(54 110)">
+              <rect width="34" height="22" rx="3" class="f-surface s-ink" stroke-width="2.5"/>
+              <path d="M3 3 L17 13 L31 3" fill="none" class="s-ink" stroke-width="2" stroke-linejoin="round"/>
+            </g>
+            <text x="48" y="168" text-anchor="middle" class="svg-tm">spam filter</text>
+            <rect x="104" y="16" width="116" height="206" rx="8" class="s-ink" stroke-width="3" style="fill:var(--c-gray)"/>
+            <rect x="112" y="28" width="100" height="56" rx="4" class="f-accent s-ink" stroke-width="2.5"/>
+            <rect x="134" y="38" width="56" height="20" rx="3" class="f-surface s-ink" stroke-width="1.5"/>
+            <text x="162" y="52" text-anchor="middle" class="svg-t">INBOX</text>
+            <path d="M148 70 H176" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <rect x="112" y="94" width="100" height="56" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+            <rect x="134" y="104" width="56" height="20" rx="3" class="f-bg s-ink" stroke-width="1.5"/>
+            <text x="162" y="118" text-anchor="middle" class="svg-t">Junk</text>
+            <path d="M148 136 H176" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <rect x="112" y="160" width="100" height="56" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+            <rect x="134" y="170" width="56" height="20" rx="3" class="f-bg s-ink" stroke-width="1.5"/>
+            <text x="162" y="184" text-anchor="middle" class="svg-t">Sent</text>
+            <path d="M148 202 H176" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <path d="M90 108 C102 98, 100 66, 110 58" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <path d="M88 128 C98 132, 102 124, 110 122" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <path d="M220 56 C238 56, 248 76, 258 88" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <text x="282" y="48" text-anchor="middle" class="svg-t">IMAP :993</text>
+            <use href="#ico-phone" x="236" y="56" width="92" height="92"/>
+            <text x="280" y="166" text-anchor="middle" class="svg-tm">bob@example.net</text>
+          </svg>
+          <figcaption>Yellow: the <code>INBOX</code> drawer, because the letter stays on the server and Bob's app only reads it.</figcaption>
+        </figure>
+        <div class="words">
+          <p><strong>In plain words.</strong> A <strong>spam filter</strong> reads the letter and picks a drawer: Inbox or Junk. Bob's app opens the drawer with IMAP. The letter stays in the cabinet, so his laptop sees it too.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> IMAP listens on port <code>993</code> (TLS) or <code>143</code>. <code>INBOX</code> is the main mailbox, and flags such as <code>\Seen</code> live on the server. With <code>IDLE</code>, the server tells the app the moment a letter lands (<code>* 4 EXISTS</code>).</p></div>
+          <div class="tags"><span class="tag">clerk = spam filter</span><span class="tag">cabinet = mailbox store</span><span class="tag">drawer = IMAP mailbox</span></div>
+        </div>
+      </div>
+    </li>
+  </ol>
+
+  <section class="catch">
+    <div class="wrap">
+      <h2>The From line Bob sees is not the address SPF checks.</h2>
+      <p>SPF checks the envelope (<code>MAIL FROM</code>), so a spammer can pass it with their own domain while the letter says <code>From: you@bank.example</code>. Only DMARC ties the checks to the visible <code>From:</code>.</p>
+    </div>
+  </section>
+
+  <section class="wrap further">
+    <h2>Push further</h2>
+    <details><summary>Why does forwarding break SPF but not DKIM?</summary><p>The forwarder posts it again from its own server, which the SPF record of <code>example.com</code> does not list. The DKIM seal rides inside the letter and survives unless someone edits the signed parts.</p></details>
+    <details><summary>Why did my mail arrive an hour late?</summary><p>Bob's server can answer <code>4xx</code>, which means try later. Your server then waits at least 30 minutes before the next try.</p></details>
+    <details><summary>How do I see which checks passed?</summary><p>Open the raw message and find the <code>Authentication-Results</code> header. Bob's server writes the <code>spf=</code>, <code>dkim=</code> and <code>dmarc=</code> results there.</p></details>
+  </section>
+
+  <footer class="wrap colophon">
+    <p><strong>Simplified on purpose.</strong> One hop each way; real mail can pass more relays, and TLS between servers is left out.</p>
+    <p>Sources: RFCs <a href="https://www.rfc-editor.org/rfc/rfc5321">5321</a> (SMTP), <a href="https://www.rfc-editor.org/rfc/rfc6409">6409</a> (submission), <a href="https://www.rfc-editor.org/rfc/rfc7208">7208</a> (SPF), <a href="https://www.rfc-editor.org/rfc/rfc6376">6376</a> (DKIM), <a href="https://www.rfc-editor.org/rfc/rfc7489">7489</a> (DMARC), <a href="https://www.rfc-editor.org/rfc/rfc9051">9051</a> (IMAP) and <a href="https://www.rfc-editor.org/rfc/rfc8601">8601</a>. Not verified: how spam filters pick a drawer; no RFC defines it.</p>
+  </footer>
+</main>
+</body>
+</html>

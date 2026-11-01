@@ -29,14 +29,14 @@ Start from [template.html](template.html). Keep its tokens, dark mode and layout
 2. **At a glance.** The route under the lede (`.cast`, drawn as pills): 4–6 stops of the flow (actors, or the one object that carries it, such as the token) in the order of the trace, each once (a round trip too), in plain words with its character and a short real term. Mark the deciding stop with `li.hl` (a dashed yellow pill): where the answer is made, or where it breaks. Caption: what is marked and why, then "The drawings below zoom into each part." Then **In plain words.** 2–4 sentences.
 3. **Zooms** (how many: see Depth). Each zoom opens one part of the glance (a part may get more than one zoom):
    - a headline that makes one claim and ends with a period;
-   - a drawing: a scene (the metaphor's objects doing the step) or a diagram with the real names (a numbered sequence diagram for a flow, a state machine for states, a layout for data). Every page has at least one scene;
-   - a caption: "Highlighted: <the step that matters>, because <why>.";
+   - a picture: a scene (the metaphor's objects doing the step), or a diagram when the order of messages is the point (see Drawings);
+   - a caption: "Yellow: <the thing that matters>, because <why>." (in a diagram: "Highlighted: …");
    - **In plain words.** 1–3 sentences;
    - **Under the hood.** The real mechanism, its numbers matching the drawing's numbers (see Depth). A code block goes right after it;
    - one `.tag` per metaphor word, mapping it to its real name: `guest list = Access-Control-Allow-Origin`. Give each mapping once, in the first zoom that uses it.
 4. **The catch.** The one thing that bites people.
 5. **Push further.** Questions a sharp reader asks next: failure modes, races, what to cache, how to test. Each is a `<details>` with the question as `<summary>` and a 1–2 sentence answer inside.
-6. **Footer.** What you simplified on purpose, in one line. One or two primary sources (a spec, an RFC, the official docs, or the project files as chips). Mark any claim you could not check as "not verified".
+6. **Footer.** What you simplified on purpose, in one line. The primary sources you used (specs, RFCs, official docs, or the project files as chips). Mark any claim you could not check as "not verified".
 
 ## Depth
 
@@ -53,22 +53,17 @@ Count prose as all visible text in the body except SVGs and `<pre>` blocks. Code
 
 ## Drawings
 
-Draw for a reader with a photographic memory: they should recall the page as pictures.
+Draw for a reader with a photographic memory: they should recall the page as pictures. [example.html](example.html) shows the bar; copy its drawing style, not its topic.
 
-- **Draw with the cast.** The template's sprite holds hand-drawn characters: `ico-browser`, `ico-server`, `ico-person`, `ico-phone`, `ico-robot` (actors, with faces), and `ico-db`, `ico-letter`, `ico-key`, `ico-lock`, `ico-list`, `ico-clock`, `ico-cloud`, `ico-gear`, `ico-box`, `ico-shield`, `ico-bolt`, `ico-stop`, `ico-check`, and scene props: `ico-cabinet`, `ico-book`, `ico-bell`, `ico-bin`, `ico-door`, `ico-mailbox`, `ico-search`, `ico-switch-on`, `ico-switch-off`. Place one with `<use href="#ico-server" x y width height/>`.
-- **Scenes carry the memory; diagrams carry the mechanism.** A scene shows the metaphor's objects doing the step: a filing cabinet whose drawers have switches, a bell that rings two listeners, a bin for what gets dropped, one door per way in. Draw 2–4 props big, with the real names as small mono labels.
-- When the metaphor's actors are objects (an index book, a card cabinet), the props play them, under the same rules as characters.
-- **One character per actor, all page long.** The same character and color in the strip and in every drawing: on top of its lifeline in a flow, beside its part in a layout or a state picture. Recolor with `style="--fill:var(--c-pink)"` only to tell two of a kind apart. When an actor changes role (a follower becomes the leader), color by role and say so in the caption.
-- **One picture per zoom that a reader could recall with closed eyes**: the letter with a stamp, the lock on the door, the stop sign on the reply.
-- If the cast lacks an object, draw it the same way: a 64×64 `<symbol>`, the `o` outline class, one crayon fill, a face only for an actor.
-- **A highlighter marks what matters.** One per drawing: a `.pen` ellipse over it (a yellow highlighter blob, drawn after the label), and `.hot` with `url(#arrow-hl)` (a thick ink line) for its path when it has one; both mark the same thing. Everything else stays muted. Keep the mark at least 10 units inside the drawing's edges.
-- `.wire` is the main path. `.wire.cut` (dashed) is async, optional, or off the hot path.
-- In a flow, numbered `.num-bg` + `.num` circles match the numbers in the text. A layout or a state picture needs no numbers.
-- Keep real names short in drawings and in the strip (about 16 characters: `ACAO header`, `Origin`). Give the full name in the words.
-- Text is centered. Add `class="… start"` or `"… end"` to align a label left or right.
-- Label a store or outside system with why it is there: "Redis · locks, 30-day TTL".
-- **Fit a phone.** A `viewBox` 400 units wide, at most 3 actors across, labels at 13 units or larger. With more actors, stack the flow top to bottom, or draw 3 and say in the footer what the real system has ("Raft clusters usually run five servers").
-- `role="img"` and a full-sentence `aria-label` on every drawing. Use the template's shared markers; do not define ids inside a drawing.
+- **Scenes first.** Each zoom's picture is a scene: 1–3 big objects doing the step. A phone with its button sends two letters. A mailbox hands a letter to a clerk. A filing cabinet's drawers have on/off switches. Draw a sequence diagram only when the order of messages is the point (mostly at `deep`).
+- **Draw objects big and flat.** The main object fills about a third of the card. Flat fills from the palette (`f-surface`, `f-bg`, `f-line`, `f-blue`, `f-accent`, `f-yes`, `f-no`), thick ink outlines (`s-ink`, `stroke-width` 2.5–3), rounded corners. Join objects with dashed curves (`s-muted`, `stroke-dasharray="5 5"`) and one solid ink line for the main move.
+- **One yellow thing per scene**: the object that decides (`f-accent`). In a diagram, mark it with a `.pen` highlighter blob and a `.hot` path instead.
+- **Labels are small.** Real names in mono under the object (`svg-t`, `svg-tm`), a title in display (`svg-tb`), text on yellow in `svg-ta`. Set `text-anchor` on each label. Keep real names short (about 16 characters); give the full name in the words.
+- **The cast** (`<use href="#ico-…">`) can act in a scene, scaled up to about 84 units (1.3×; past that its outlines get too thick, so draw bigger objects yourself): `ico-browser`, `ico-server`, `ico-person`, `ico-phone`, `ico-laptop`, `ico-robot` (actors, with faces), `ico-db`, `ico-letter`, `ico-key`, `ico-lock`, `ico-list`, `ico-clock`, `ico-cloud`, `ico-gear`, `ico-box`, `ico-shield`, `ico-bolt`, `ico-stop`, `ico-check`, and props `ico-cabinet`, `ico-book`, `ico-bell`, `ico-bin`, `ico-door`, `ico-mailbox`, `ico-search`, `ico-switch-on`, `ico-switch-off`. Draw your own object when a scene needs one; keep the same look.
+- **One object per actor, all page long.** The same drawing and color in the route and in every scene. When an actor changes role, color by role and say so in the caption.
+- **A diagram**, when you need one: lifelines (`.life`), messages (`.wire`, `.wire.cut` for async), the shared `url(#arrow)` / `url(#arrow-hl)` markers, numbered `.num-bg` + `.num` circles that match the text, `.n` / `.t` / `.l` labels (centered; add `start` or `end` to align).
+- **Every drawing is 340 units wide** (`viewBox="0 0 340 H"`), labels at 11 units or larger, at most 3 actors across, so it reads on a phone. Keep marks 10 units inside the edges.
+- `role="img"` and a full-sentence `aria-label` on every drawing. Do not define ids inside a drawing.
 
 ## Words
 
