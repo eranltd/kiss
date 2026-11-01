@@ -26,7 +26,7 @@ Input: $ARGUMENTS
 Start from [template.html](template.html). Keep its tokens, dark mode and layout. Replace the content.
 
 1. **Hero.** An h1 that IS the answer in one short sentence. A lede of 1–2 sentences with the concrete trace.
-2. **At a glance.** The cast strip (`.cast`) under the lede: 4–6 members of the flow in the order of the trace, each once (a round trip too), in plain words with its character and a short real term, the deciding one circled (`li.hl`). Caption: what is circled and why, then "The drawings below zoom into each part." Then **In plain words.** 2–4 sentences.
+2. **At a glance.** The cast strip (`.cast`) under the lede: 4–6 members of the flow (actors, or the one object that carries it, such as the token) in the order of the trace, each once (a round trip too), in plain words with its character and a short real term, the deciding one circled (`li.hl`). Caption: what is circled and why, then "The drawings below zoom into each part." Then **In plain words.** 2–4 sentences.
 3. **3–6 zooms.** Each zoom opens one part of the glance (a part may get more than one zoom):
    - a headline that makes one claim and ends with a period;
    - a drawing with the real names (a numbered sequence diagram for a flow, a state machine for states, a layout for data);
@@ -44,7 +44,7 @@ Start from [template.html](template.html). Keep its tokens, dark mode and layout
 | Reader | new to the field | a developer new to this topic | an engineer who wants the internals |
 | Zooms | 2–3, plain words in the drawings | 3–5, real names in the drawings | 4–6, sequence diagrams and state machines |
 | Under the hood | none | 1–3 sentences | a numbered step list with real names, plus failure modes and real numbers (latency, sizes, limits) |
-| Code | none | under 10 lines, only if it is the clearest picture | real snippets, under 20 lines each |
+| Code | none | at most two blocks under 10 lines, only where code is the clearest picture | real snippets, under 20 lines each |
 | Push further | 2 | 3 | 5 |
 | Prose | 250–450 words | 500–900 words | 900–1,500 words |
 
@@ -58,7 +58,7 @@ Draw for a reader with a photographic memory: they should recall the page as pic
 - **One character per actor, all page long.** The same character and color in the strip and in every drawing: on top of its lifeline in a flow, beside its part in a layout or a state picture. Recolor with `style="--fill:var(--c-pink)"` only to tell two of a kind apart. When an actor changes role (a follower becomes the leader), color by role and say so in the caption.
 - **One picture per zoom that a reader could recall with closed eyes**: the letter with a stamp, the lock on the door, the stop sign on the reply.
 - If the cast lacks an object, draw it the same way: a 64×64 `<symbol>`, the `o` outline class, one crayon fill, a face only for an actor.
-- **Red pen marks what matters.** One per drawing: a `.pen` ellipse around it, tilted a few degrees, and `.hot` with `url(#arrow-hl)` for its path when it has one; both mark the same thing. Everything else stays ink. Keep 20 units free at the drawing's edges so the pen is not clipped.
+- **Red pen marks what matters.** One per drawing: a `.pen` ellipse around it, tilted a few degrees, and `.hot` with `url(#arrow-hl)` for its path when it has one; both mark the same thing. Everything else stays ink. Keep the pen at least 10 units inside the drawing's edges so it is not clipped.
 - `.wire` is the main path. `.wire.cut` (dashed) is async, optional, or off the hot path.
 - In a flow, numbered `.num-bg` + `.num` circles match the numbers in the text. A layout or a state picture needs no numbers.
 - Keep real names short in drawings and in the strip (about 16 characters: `ACAO header`, `Origin`). Give the full name in the words.
