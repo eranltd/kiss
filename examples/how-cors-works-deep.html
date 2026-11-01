@@ -6,7 +6,7 @@
 <title>The Guest List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 /* Layout: a printed manual marked up in red pen. The hero shows the whole cast at a glance; each zoom draws one part with the same characters, then says it twice: in plain words and under the hood. */
 :root{
@@ -145,6 +145,151 @@ th{font-weight:600;color:var(--muted)}
 .colophon p+p{margin-top:var(--space-xs)}
 .colophon strong{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+/* kiss skin: post office */
+/* Layout: a post-office story told top to bottom. The hero names the route as pills; each zoom is a stamped step, picture card left, few words right. */
+:root{
+  --bg:#F2F5F9; --paper:#FFFFFF; --paper-2:#E8EEF6; --ink:#15223A; --ink-2:#33415C; --muted:#586982; --rule:#CAD4E2;
+  --accent:#E5B012; --accent-ink:#2E2300; --hot:#15223A; --yes:#188F6F; --no:#C9414F; --blue:#2D68D2;
+  --c-blue:#CFE0FB; --c-green:#CDEBDD; --c-yellow:#FBE7A6; --c-pink:#F8D3D8; --c-gray:#E3E8F0;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --serif:var(--body); --sans:var(--body);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
+  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
+  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
+  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
+  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0}
+html,body{overflow-x:clip}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+main{max-width:1060px;margin:0 auto;padding-inline:20px;padding-block:40px 72px;display:grid;gap:56px}
+.wrap{display:block;max-width:none;margin:0;padding:0;grid-template-columns:none}
+.wrap>*{grid-column:auto;min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;overflow-wrap:break-word;letter-spacing:-.01em}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800;line-height:1.02;max-width:20ch}
+h2{font-size:clamp(24px,3.2vw,32px);font-weight:700;line-height:1.12;max-width:none}
+p{max-width:62ch;text-wrap:pretty}
+strong{font-weight:700}
+a{color:var(--blue);text-decoration-color:currentColor}
+a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+code{font:400 .82em/1.3 var(--mono);background:color-mix(in srgb,var(--blue) 10%,transparent);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+pre{font:400 13px/1.5 var(--mono);background:color-mix(in srgb,var(--blue) 8%,var(--paper));border:1px solid var(--rule);border-radius:8px;padding:10px 12px;overflow-x:auto;max-width:100%;margin:0}
+pre code{background:none;padding:0;font-size:inherit}
+
+.hero{display:grid;gap:14px;padding:0}
+.lede{font-size:20px;line-height:1.5;color:var(--muted);max-width:60ch;margin:0}
+.lede b,.lede strong{color:var(--ink)}
+
+/* The glance: the route as pills, a character in each; the deciding stop is stamped. */
+.cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
+.cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
+.cast li+li::before{content:"→";position:absolute;left:-25px;top:50%;transform:translateY(-50%);width:auto;height:auto;background:none;-webkit-mask:none;mask:none;color:var(--muted);font:400 16px/1 var(--mono)}
+.cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
+.cast b{font-weight:700}
+.cast code{background:none;padding:0;color:var(--muted);font-size:12px}
+.cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
+.cast li.hl::after{content:none}
+@media (max-width:40rem){
+  .cast{flex-direction:column;align-items:flex-start;gap:26px}
+  .cast li{display:inline-flex;grid-template-columns:none;width:auto}
+  .cast li .ico{grid-row:auto;width:30px;height:30px}
+  .cast li>:not(.ico){grid-column:auto}
+  .cast li+li::before{content:"↓";left:20px;top:-22px;transform:none;width:auto;height:auto}
+}
+.caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
+.glance-words{margin:0}
+
+/* Zooms: stamped steps, picture card left, words right; dashed seams between. */
+.zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
+.zoom{counter-increment:zoom;display:grid;gap:18px;padding:0}
+.zoom::before{content:none}
+.zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
+.zoom h2{display:flex;align-items:center;gap:14px;position:static;grid-column:auto}
+.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:rotate(-3deg)}
+.zoom-body{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:36px;align-items:center}
+@media (max-width:760px){.zoom-body{grid-template-columns:minmax(0,1fr);gap:20px}}
+.drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
+.drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
+.drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
+.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:none}
+.words{display:grid;gap:12px;min-width:0}
+.hood{font:400 15px/1.55 var(--body);color:var(--ink-2);border-left:3px solid var(--rule);padding-left:12px}
+.hood strong{color:var(--ink)}
+.hood ol{padding-left:1.2em;display:grid;gap:4px}
+.hood>*+*{margin-top:6px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font:400 12.5px/1.4 var(--mono);color:var(--muted);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;overflow-wrap:anywhere}
+.big{font:700 21px/1.3 var(--display);border-left:4px solid var(--accent);padding-left:14px;max-width:40ch}
+.pill{display:inline-block;font:600 12px/1.6 var(--mono);color:var(--ink);border-radius:999px;padding:0 9px;white-space:nowrap}
+.pill.yes{background:color-mix(in srgb,var(--yes) 16%,transparent);color:var(--yes)}
+.pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
+.pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
+
+/* SVG paint comes from tokens, so dark mode follows. */
+.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.dot{fill:var(--ink)}
+.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+.wire{stroke:var(--muted);stroke-width:2;fill:none;stroke-linecap:round}
+.hot{stroke:var(--hot);stroke-width:3;fill:none;stroke-linecap:round}
+.cut{stroke-dasharray:6 6}
+.life{stroke:var(--rule);stroke-width:1.5;stroke-dasharray:3 6;stroke-linecap:round}
+.pen{fill:var(--accent);fill-opacity:.38;stroke:none}
+.n{font:700 15px var(--display);fill:var(--ink);text-anchor:middle}
+.t{font:400 12.5px var(--mono);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.l{font:400 13.5px var(--body);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.l.h{fill:var(--ink);font-weight:700}
+.start{text-anchor:start}
+.end{text-anchor:end}
+.num-bg{fill:var(--ink)}
+.num{font:700 11px var(--mono);fill:var(--paper);text-anchor:middle}
+.tip{fill:var(--muted)}
+.tip-hot{fill:var(--hot)}
+
+/* The catch: the one boxed note on the page. */
+.catch{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:18px;padding:22px}
+.catch .wrap{display:grid;gap:10px}
+.catch h2{font-size:26px;line-height:1.15;max-width:none}
+.catch p{margin:0;max-width:62ch}
+.catch code{background:color-mix(in srgb,var(--blue) 10%,transparent)}
+
+.further{padding:0;display:grid;gap:0}
+.further h2{margin-bottom:12px}
+.further details{border-top:1px solid var(--rule);padding-block:12px;max-width:none}
+.further details:last-child{border-bottom:1px solid var(--rule)}
+.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:700 16px/1.45 var(--body)}
+.further summary::-webkit-details-marker{display:none}
+.further summary::before{content:"+";font-family:var(--mono);color:var(--muted)}
+.further details[open] summary::before{content:"−"}
+.further details p{font:400 15px/1.55 var(--body);color:var(--ink-2);margin:6px 0 0 1.5rem}
+
+/* Decision pages: two cards and a table. */
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.compare>*{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;background:var(--paper);display:grid;gap:6px}
+.compare>.pick{border:2px dashed var(--accent)}
+.compare h3{margin:0;font:600 12px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.compare p{font-size:15px;color:var(--ink-2)}
+@media (max-width:760px){.compare{grid-template-columns:minmax(0,1fr)}}
+.table{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font:400 15px/1.45 var(--body);font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+.colophon{padding:0;font:400 14px/1.6 var(--body);color:var(--muted)}
+.colophon p+p{margin-top:6px}
+.colophon strong{color:var(--ink)}
+@media (max-width:760px){body{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -153,7 +298,7 @@ th{font-weight:600;color:var(--muted)}
   <defs>
     <filter id="rough" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1400" height="1400"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--hot)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <symbol id="ico-browser" viewBox="0 0 64 64"><rect class="o" x="6" y="10" width="52" height="44" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M6 21h52"/><circle class="dot" cx="13" cy="15.5" r="1.8"/><circle class="dot" cx="19" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="34" r="2.6"/><circle class="dot" cx="39" cy="34" r="2.6"/><path class="o" d="M26 42q6 5 12 0"/></symbol>
   <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
@@ -186,7 +331,7 @@ th{font-weight:600;color:var(--muted)}
       <li><svg class="ico" aria-hidden="true"><use href="#ico-server"/></svg><b>The API</b><code>api.shop.com</code></li>
       <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-list"/></svg><b>The guest list</b><code>ACAO header</code></li>
     </ol>
-    <p class="caption">Circled: the guest list, because the browser hands over the reply only if your origin is on it. The drawings below zoom into each part.</p>
+    <p class="caption">Marked: the guest list, because the browser hands over the reply only if your origin is on it. The drawings below zoom into each part.</p>
     <p class="glance-words"><strong>In plain words.</strong> Your script asks the browser to fetch from another origin. For risky requests, the browser first asks the API if that is allowed. Every answer from the API carries a guest list. The browser gives the reply to your script only if your origin is on that list.</p>
   </header>
 

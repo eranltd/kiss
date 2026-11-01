@@ -2,7 +2,7 @@
 
 Keep it simple. Explain any tech topic to a developer as one plain HTML page.
 
-![The glance: the whole flow as a cast of hand-drawn characters, the deciding one circled in red pen](docs/hero.png)
+![The glance: the whole flow as route pills with a character in each, the deciding stop marked in yellow](docs/hero.png)
 
 ```
 /kiss how CORS works
@@ -31,7 +31,7 @@ Simple means fewer ideas, never wrong ones. Pick how far down you go:
 | default | a developer new to the topic | 3–5 zooms with real names, each with a short "Under the hood". |
 | `deep` | an engineer who wants the internals | Sequence diagrams and state machines, failure modes, real numbers, real code. |
 
-![A zoom: a sequence diagram with the same characters on the lifelines, the deciding step circled, the same idea in plain words and under the hood](docs/zoom.png)
+![A zoom: a stamped step with a sequence diagram in a white card, the deciding step highlighted, the same idea in plain words and under the hood](docs/zoom.png)
 
 Ask about code in your project and it reads the code first, then uses the real file and function names.
 
@@ -41,9 +41,9 @@ See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples
 
 <img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a preflight sequence diagram that fits the screen" width="320">
 
-Every page draws with the same cast of hand-drawn characters, so you remember pictures, not boxes.
+Every page draws with the same cast of characters and scene props, so you remember pictures, not boxes.
 
-![The cast: 18 hand-drawn characters and 9 scene props with crayon fills](docs/cast.png)
+![The cast: 18 characters and 9 scene props](docs/cast.png)
 
 ## Install
 
