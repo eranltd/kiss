@@ -48,9 +48,11 @@ Every page draws with the same cast of hand-drawn characters, so you remember pi
 ## Install
 
 ```
-/plugin marketplace add eranltd/kiss
-/plugin install kiss@kiss
+/plugin marketplace add eranltd/claude-plugins
+/plugin install kiss@eranltd
 ```
+
+That marketplace also lists [pixel-pet](https://github.com/eranltd/pixel-pet). To add this repo on its own instead: `/plugin marketplace add eranltd/kiss`, then `/plugin install kiss@kiss`.
 
 ## Why not ELI5?
 
