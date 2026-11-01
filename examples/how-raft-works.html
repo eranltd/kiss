@@ -2,443 +2,410 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How Raft Agrees</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How Raft Servers Agree</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: a post-office story told top to bottom. The hero names the route as pills; each zoom is a stamped step, picture card left, few words right. */
-:root{
-  --bg:#F2F5F9; --paper:#FFFFFF; --paper-2:#E8EEF6; --ink:#15223A; --ink-2:#33415C; --muted:#586982; --rule:#CAD4E2;
-  --accent:#E5B012; --accent-ink:#2E2300; --hot:#15223A; --yes:#188F6F; --no:#C9414F; --blue:#2D68D2;
-  --c-blue:#CFE0FB; --c-green:#CDEBDD; --c-yellow:#FBE7A6; --c-pink:#F8D3D8; --c-gray:#E3E8F0;
-  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
-  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
-  --serif:var(--body); --sans:var(--body);
-  color-scheme:light;
+/* Layout: a story told top to bottom, one stamped step per stop, picture left, few words right */
+:root {
+  --bg: #F0EEE6;
+  --surface: #FFFFFF;
+  --ink: #141413;
+  --muted: #5F5D57;
+  --line: #D6D2C6;
+  --accent: #D97757;
+  --accent-ink: #1F0C04;
+  --yes: #4E6B38;
+  --no: #A8323E;
+  --font-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
-  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
-  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
-  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
-  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
-  color-scheme:dark;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+    --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+    color-scheme: dark;
+  }
 }
-*,*::before,*::after{box-sizing:border-box;margin:0}
-html,body{overflow-x:clip}
-body{background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--body);-webkit-font-smoothing:antialiased}
-main{max-width:1060px;margin:0 auto;padding-inline:20px;padding-block:40px 72px;display:grid;gap:56px}
-.wrap{display:block;max-width:none;margin:0;padding:0;grid-template-columns:none}
-.wrap>*{grid-column:auto;min-width:0}
-h1,h2,h3{font-family:var(--display);text-wrap:balance;overflow-wrap:break-word;letter-spacing:-.01em}
-h1{font-size:clamp(38px,6vw,64px);font-weight:800;line-height:1.02;max-width:20ch}
-h2{font-size:clamp(24px,3.2vw,32px);font-weight:700;line-height:1.12;max-width:none}
-p{max-width:62ch;text-wrap:pretty}
-strong{font-weight:700}
-a{color:var(--blue);text-decoration-color:currentColor}
-a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-code{font:400 .82em/1.3 var(--mono);background:color-mix(in srgb,var(--blue) 10%,transparent);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
-pre{font:400 13px/1.5 var(--mono);background:color-mix(in srgb,var(--blue) 8%,var(--paper));border:1px solid var(--rule);border-radius:8px;padding:10px 12px;overflow-x:auto;max-width:100%;margin:0}
-pre code{background:none;padding:0;font-size:inherit}
-
-.hero{display:grid;gap:14px;padding:0}
-.lede{font-size:20px;line-height:1.5;color:var(--muted);max-width:60ch;margin:0}
-.lede b,.lede strong{color:var(--ink)}
-
-/* The glance: the route as pills, a character in each; the deciding stop is stamped. */
-.cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
-.cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
-.cast li+li::before{content:none}
-.cast li:not(:last-child)::after{content:"→";position:absolute;right:-25px;left:auto;top:50%;bottom:auto;inset:auto -25px auto auto;width:auto;height:auto;border:0;border-radius:0;transform:translateY(-50%);background:none;color:var(--muted);font:400 16px/1 var(--mono);pointer-events:none}
-.cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
-.cast b{font-weight:700}
-.cast code{background:none;padding:0;color:var(--muted);font-size:12px}
-.cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
-.cast li.hl:last-child::after{content:none}
-@media (max-width:40rem){
-  .cast{flex-direction:column;align-items:flex-start;gap:26px}
-  .cast li{display:inline-flex;grid-template-columns:none;width:auto}
-  .cast li .ico{grid-row:auto;width:30px;height:30px}
-  .cast li>:not(.ico){grid-column:auto}
-  .cast li:not(:last-child)::after{content:"↓";inset:auto auto -24px 20px;transform:none}
+:root[data-theme="dark"] {
+  --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+  --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+  color-scheme: dark;
 }
-.caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
-.glance-words{margin:0}
 
-/* Zooms: picture card left; stamp, claim and words right; dashed seams between. */
-.zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
-.zoom{counter-increment:zoom;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"pic head" "pic words";column-gap:40px;row-gap:14px;align-content:center;padding:0}
-.zoom::before{content:none}
-.zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
-.zoom-body{display:contents}
-.zoom h2{grid-area:head;align-self:end;position:relative;display:block;padding:8px 0 8px 66px;min-height:52px}
-.zoom h2::before{content:counter(zoom);position:absolute;left:0;top:50%;right:auto;transform:translateY(-50%);width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent)}
-.zoom .drawing{grid-area:pic;align-self:center}
-.zoom .words{grid-area:words;align-self:start}
-@media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
-.drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
-.drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
-.drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
-.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:none}
-.words{display:grid;gap:12px;min-width:0}
-.hood{font:400 15px/1.55 var(--body);color:var(--ink-2);border-left:3px solid var(--rule);padding-left:12px}
-.hood strong{color:var(--ink)}
-.hood ol{padding-left:1.2em;display:grid;gap:4px}
-.hood>*+*{margin-top:6px}
-.tags{display:flex;flex-wrap:wrap;gap:6px}
-.tag{font:400 12.5px/1.4 var(--mono);color:var(--muted);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;overflow-wrap:anywhere}
-.big{font:700 21px/1.3 var(--display);border-left:4px solid var(--accent);padding-left:14px;max-width:40ch}
-.pill{display:inline-block;font:600 12px/1.6 var(--mono);color:var(--ink);border-radius:999px;padding:0 9px;white-space:nowrap}
-.pill.yes{background:color-mix(in srgb,var(--yes) 16%,transparent);color:var(--yes)}
-.pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
-.pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; }
+.page { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; display: grid; gap: 56px; }
 
-/* Scene paint: flat fills and thick ink, from the tokens. */
-.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-line{stroke:var(--rule)}
-.f-surface{fill:var(--paper)} .f-bg{fill:var(--bg)} .f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-line{fill:var(--rule)}
-.f-accent{fill:var(--accent)} .f-yes{fill:var(--yes)} .f-no{fill:var(--no)} .f-blue{fill:var(--blue)}
-.svg-t{font:400 12px var(--mono);fill:var(--ink)}
-.svg-tm{font:400 11px var(--mono);fill:var(--muted)}
-.svg-tb{font:700 15px var(--display);fill:var(--ink)}
-.svg-ta{font:700 14px var(--display);fill:var(--accent-ink)}
-/* SVG paint comes from tokens, so dark mode follows. */
-.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.dot{fill:var(--ink)}
-.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
-.wire{stroke:var(--muted);stroke-width:2;fill:none;stroke-linecap:round}
-.hot{stroke:var(--hot);stroke-width:3;fill:none;stroke-linecap:round}
-.cut{stroke-dasharray:6 6}
-.life{stroke:var(--rule);stroke-width:1.5;stroke-dasharray:3 6;stroke-linecap:round}
-.pen{fill:var(--accent);fill-opacity:.38;stroke:none}
-.n{font:700 15px var(--display);fill:var(--ink);text-anchor:middle}
-.t{font:400 12.5px var(--mono);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l{font:400 13.5px var(--body);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l.h{fill:var(--ink);font-weight:700}
-.start{text-anchor:start}
-.end{text-anchor:end}
-.num-bg{fill:var(--ink)}
-.num{font:700 11px var(--mono);fill:var(--paper);text-anchor:middle}
-.tip{fill:var(--muted)}
-.tip-hot{fill:var(--hot)}
+/* hero */
+.hero { display: grid; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 6vw, 64px); line-height: 1.02; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.hero p { margin: 0; font-size: 20px; color: var(--muted); max-width: 60ch; }
+.hero b { color: var(--ink); }
 
-/* The catch: the one boxed note on the page. */
-.catch{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:18px;padding:22px}
-.catch .wrap{display:grid;gap:10px}
-.catch h2{font-size:26px;line-height:1.15;max-width:none}
-.catch p{margin:0;max-width:62ch}
-.catch code{background:color-mix(in srgb,var(--blue) 10%,transparent)}
+/* route strip */
+.route { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 13px; }
+.route span.stop { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.route span.arrow { color: var(--muted); }
 
-.further{padding:0;display:grid;gap:0}
-.further h2{margin-bottom:12px}
-.further details{border-top:1px solid var(--rule);padding-block:12px;max-width:none}
-.further details:last-child{border-bottom:1px solid var(--rule)}
-.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:700 16px/1.45 var(--body)}
-.further summary::-webkit-details-marker{display:none}
-.further summary::before{content:"+";font-family:var(--mono);color:var(--muted)}
-.further details[open] summary::before{content:"−"}
-.further details p{font:400 15px/1.55 var(--body);color:var(--ink-2);margin:6px 0 0 1.5rem}
+/* steps */
+.step { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 36px; align-items: center; }
+.step + .step { border-top: 1px dashed var(--line); padding-top: 48px; }
+.pic { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.pic svg { display: block; width: 100%; height: auto; }
+.words { display: grid; gap: 12px; min-width: 0; }
+.head { display: flex; gap: 14px; align-items: center; }
+.stamp { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border: 2px dashed var(--accent); border-radius: 6px; font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--ink); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.stamp.why { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.small { margin: 0; font-size: 14px; color: var(--muted); }
+.reasons { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 62ch; }
+.reasons li::marker { font-family: var(--font-display); font-weight: 800; color: var(--muted); }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 3.2vw, 32px); line-height: 1.12; margin: 0; text-wrap: balance; }
+.words p { margin: 0; max-width: 62ch; }
+.big-idea { font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.3; border-left: 4px solid var(--accent); padding-left: 14px; }
 
-/* Decision pages: two cards and a table. */
-.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.compare>*{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;background:var(--paper);display:grid;gap:6px}
-.compare>.pick{border:2px dashed var(--accent)}
-.compare h3{margin:0;font:600 12px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.compare p{font-size:15px;color:var(--ink-2)}
-@media (max-width:760px){.compare{grid-template-columns:minmax(0,1fr)}}
-.table{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font:400 15px/1.45 var(--body);font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
-th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+code, .tag { font-family: var(--font-mono); font-size: .82em; }
+code { background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 3px 8px; color: var(--muted); }
 
-.colophon{padding:0;font:400 14px/1.6 var(--body);color:var(--muted)}
-.colophon p+p{margin-top:6px}
-.colophon strong{color:var(--ink)}
-@media (max-width:760px){body{font-size:16px}}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+/* small tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td code { overflow-wrap: break-word; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.pill.yes { background: color-mix(in srgb, var(--yes) 16%, transparent); color: var(--yes); }
+.pill.no { background: color-mix(in srgb, var(--no) 14%, transparent); color: var(--no); }
+.pill.new { background: color-mix(in srgb, var(--accent) 26%, transparent); color: var(--ink); }
+
+/* before / after */
+.ba { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ba > div { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); display: grid; gap: 6px; }
+.ba h3 { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ba ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px; }
+
+/* doors */
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.door { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--surface); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.door h3 { margin: 0; font-family: var(--font-display); font-size: 19px; }
+.door p { margin: 0; font-size: 15px; color: var(--muted); }
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+
+/* status */
+.status { border: 2px solid var(--ink); border-radius: 18px; padding: 22px; display: grid; gap: 14px; background: var(--surface); }
+.status h2 { font-size: 26px; }
+.status ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.status li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+a { color: inherit; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* svg paint */
+.s-ink { stroke: var(--ink); }
+.s-muted { stroke: var(--muted); }
+.s-line { stroke: var(--line); }
+.s-accent { stroke: var(--accent); }
+.f-surface { fill: var(--surface); }
+.f-bg { fill: var(--bg); }
+.f-ink { fill: var(--ink); }
+.f-muted { fill: var(--muted); }
+.f-accent { fill: var(--accent); }
+.f-yes { fill: var(--yes); }
+.f-no { fill: var(--no); }
+.f-line { fill: var(--line); }
+.svg-t { font-family: var(--font-mono); font-size: 12px; fill: var(--ink); }
+.svg-tm { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.svg-tb { font-family: var(--font-display); font-weight: 700; font-size: 15px; fill: var(--ink); }
+.svg-ta { font-family: var(--font-display); font-weight: 700; font-size: 14px; fill: var(--accent-ink); }
+
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .ba, .doors { grid-template-columns: minmax(0, 1fr); }
+  .status li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
 </style>
 </head>
 <body>
+<main class="page">
 
-<!-- The cast. Actors have faces; objects do not. Recolor one use with style="--fill:var(--c-pink)". If the cast lacks something, draw it the same way: 64×64, class "o" outline, one crayon fill, a face only for an actor. -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--hot)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  </defs>
-  <symbol id="ico-browser" viewBox="0 0 64 64"><rect class="o" x="6" y="10" width="52" height="44" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M6 21h52"/><circle class="dot" cx="13" cy="15.5" r="1.8"/><circle class="dot" cx="19" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="34" r="2.6"/><circle class="dot" cx="39" cy="34" r="2.6"/><path class="o" d="M26 42q6 5 12 0"/></symbol>
-  <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
-  <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
-  <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
-  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--no)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
-  <symbol id="ico-laptop" viewBox="0 0 64 64"><rect class="o" x="12" y="12" width="40" height="30" rx="4" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M5 50h54l-5-8H10z" style="fill:var(--fill,var(--c-gray))"/><circle class="dot" cx="26" cy="25" r="2.3"/><circle class="dot" cx="38" cy="25" r="2.3"/><path class="o" d="M27 32q5 3.5 10 0"/></symbol>
-  <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
-  <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
-  <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
-  <symbol id="ico-lock" viewBox="0 0 64 64"><path class="o" d="M21 29v-8a11 11 0 0 1 22 0v8"/><rect class="o" x="13" y="29" width="38" height="28" rx="5" style="fill:var(--fill,var(--c-yellow))"/><circle class="dot" cx="32" cy="40" r="3"/><path class="o" d="M32 42v6"/></symbol>
-  <symbol id="ico-list" viewBox="0 0 64 64"><rect class="o" x="12" y="10" width="40" height="49" rx="5" style="fill:var(--fill,var(--paper))"/><rect class="o" x="23" y="5" width="18" height="9" rx="3" style="fill:var(--c-gray)"/><path class="o" d="M19 27l3 3 5-6M32 27h13M19 39l3 3 5-6M32 39h13M21 50h4M32 50h13"/></symbol>
-  <symbol id="ico-clock" viewBox="0 0 64 64"><circle class="o" cx="32" cy="33" r="23" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 19v14l9 6M26 6h12"/></symbol>
-  <symbol id="ico-cloud" viewBox="0 0 64 64"><path class="o" d="M19 49h29a11 11 0 0 0 1-22 15 15 0 0 0-29-3 12.5 12.5 0 0 0-1 25z" style="fill:var(--fill,var(--c-blue))"/></symbol>
-  <symbol id="ico-gear" viewBox="0 0 64 64"><circle cx="32" cy="32" r="21" fill="none" stroke="var(--ink)" stroke-width="8" stroke-dasharray="5.5 5.5"/><circle class="o" cx="32" cy="32" r="17" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="32" cy="32" r="5.5" style="fill:var(--paper)"/></symbol>
-  <symbol id="ico-box" viewBox="0 0 64 64"><path class="o" d="M10 22l22-11 22 11v24L32 57 10 46z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M10 22l22 11 22-11M32 33v24"/></symbol>
-  <symbol id="ico-shield" viewBox="0 0 64 64"><path class="o" d="M32 5l21 7v16c0 14-9 24-21 31C20 52 11 42 11 28V12z" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M23 32l6 6 12-13"/></symbol>
-  <symbol id="ico-bolt" viewBox="0 0 64 64"><path class="o" d="M37 4L14 36h15l-4 24 25-34H35z" style="fill:var(--fill,var(--c-yellow))"/></symbol>
-  <symbol id="ico-stop" viewBox="0 0 64 64"><path class="o" d="M22 6h20l14 14v20L42 54H22L8 40V20z" style="fill:var(--fill,var(--c-pink))"/><path class="o" d="M24 22l16 16M40 22L24 38"/></symbol>
-  <symbol id="ico-check" viewBox="0 0 64 64"><circle class="o" cx="32" cy="32" r="24" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 33l8 8 15-17"/></symbol>
-  <!-- Scene props: the metaphor's objects. -->
-  <symbol id="ico-cabinet" viewBox="0 0 64 64"><rect class="o" x="12" y="5" width="40" height="54" rx="4" style="fill:var(--fill,var(--c-gray))"/><rect class="o" x="17" y="10" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="26" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="42" width="30" height="13" rx="2" style="fill:var(--paper)"/><path class="o" d="M28 16.5h8M28 32.5h8M28 48.5h8"/></symbol>
-  <symbol id="ico-book" viewBox="0 0 64 64"><path class="o" d="M32 15c-6-4-14-5-24-4v40c10-1 18 0 24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 15c6-4 14-5 24-4v40c-10-1-18 0-24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M14 23c5-.5 9 0 13 1.5M14 31c5-.5 9 0 13 1.5M14 39c5-.5 9 0 13 1.5M37 24.5c4-1.5 8-2 13-1.5M37 32.5c4-1.5 8-2 13-1.5"/></symbol>
-  <symbol id="ico-bell" viewBox="0 0 64 64"><path class="o" d="M18 44c3-4 4-8 4-15a10 10 0 0 1 20 0c0 7 1 11 4 15z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M14 44h36M28 50a4 4 0 0 0 8 0M32 9v4M8 22l5 3M56 22l-5 3"/></symbol>
-  <symbol id="ico-bin" viewBox="0 0 64 64"><path class="o" d="M16 20h32l-3 36H19z" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M11 20h42M26 20v-6h12v6M26 28v20M32 28v20M38 28v20"/></symbol>
-  <symbol id="ico-door" viewBox="0 0 64 64"><path class="o" d="M16 58V12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v46z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M10 58h44"/><circle class="dot" cx="41" cy="35" r="2.6"/></symbol>
-  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--no)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
-  <symbol id="ico-search" viewBox="0 0 64 64"><circle class="o" cx="27" cy="27" r="16" style="fill:var(--fill,var(--paper))"/><path class="o" d="M39 39l15 15" style="stroke-width:5"/><path class="o" d="M19 23a9 9 0 0 1 7-6"/></symbol>
-  <symbol id="ico-switch-on" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-green))"/><circle class="o" cx="45" cy="32" r="9" style="fill:var(--paper)"/></symbol>
-  <symbol id="ico-switch-off" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="19" cy="32" r="9" style="fill:var(--paper)"/></symbol>
-</svg>
-
-<main>
-  <header class="wrap hero">
-    <h1>Servers elect one leader, and a change counts once most of them have it.</h1>
-    <p class="lede">The leader of your five-server store crashes, and within about one election timeout (the paper suggests <b>150–300 ms</b>) a follower takes over. Your next <code>SET x=5</code> is safe once <b>three of the five</b> have written it down.</p>
-    <ol class="cast" aria-label="The whole flow at a glance">
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-clock"/></svg><b>Egg timer rings</b><code>election timeout</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-server" style="--fill:var(--c-pink)"/></svg><b>Ballots</b><code>RequestVote</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-server" style="--fill:var(--c-blue)"/></svg><b>New chair</b><code>leader</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-list"/></svg><b>New line</b><code>log[7]</code></li>
-      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-check" style="--fill:var(--accent)"/></svg><b>Three copies</b><code>majority</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-db"/></svg><b>Done</b><code>state machine</code></li>
-    </ol>
-    <p class="caption">Marked: the majority, because three of five decides both who leads and which lines are final. The drawings below zoom into each part.</p>
-    <p class="glance-words"><strong>In plain words.</strong> Think of a committee where every member keeps the same notebook. Only the chair writes new lines; the others copy them. A line counts once most members have copied it. If the chair goes quiet, the members vote in a new one.</p>
+  <header class="hero">
+    <div class="eyebrow">Distributed systems · explained simply</div>
+    <h1>How Raft servers agree</h1>
+    <p>The <b>leader</b> of your five-server store drops off the network. Within about one <b>election timeout</b>, another server takes over, and your next <code>SET x=5</code> is safe once <b>three of the five</b> have written it down.</p>
+    <div class="route" aria-label="The route in short">
+      <span class="stop">heartbeats stop</span><span class="arrow">→</span>
+      <span class="stop">election timeout</span><span class="arrow">→</span>
+      <span class="stop">RequestVote</span><span class="arrow">→</span>
+      <span class="stop">AppendEntries</span><span class="arrow">→</span>
+      <span class="stop">3 of 5</span><span class="arrow">→</span>
+      <span class="stop">apply</span><span class="arrow">→</span>
+      <span class="stop">step down</span>
+    </div>
   </header>
 
-  <ol class="zooms">
-    <li class="wrap zoom">
-      <h2>A follower that stops hearing from the leader starts an election.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 340 196" role="img" aria-label="On the left, the blue leader of term 2 has crashed, marked with a red cross, and its dashed heartbeat line to the right is cut. In the middle, a big yellow egg timer labelled election timeout, 150 to 300 ms, is ringing. A solid arrow leads from the timer to a pink server on the right, the candidate for term 3.">
-            <use href="#ico-server" x="10" y="36" width="84" height="84" style="--fill:var(--c-blue)"/>
-            <circle cx="74" cy="46" r="12" class="f-no s-ink" stroke-width="2.5"/>
-            <path d="M69 41 l10 10 M79 41 l-10 10" fill="none" stroke-width="3" stroke-linecap="round" style="stroke:var(--paper)"/>
-            <text x="52" y="138" text-anchor="middle" class="svg-t">leader</text>
-            <text x="52" y="153" text-anchor="middle" class="svg-tm">term 2</text>
-            <path d="M84 60 C130 16, 210 16, 258 60" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
-            <path d="M163 20 l14 14 M177 20 l-14 14" fill="none" stroke-width="3" stroke-linecap="round" style="stroke:var(--no)"/>
-            <text x="170" y="58" text-anchor="middle" class="t">no heartbeat</text>
-            <use href="#ico-clock" x="128" y="70" width="84" height="84" style="--fill:var(--accent)"/>
-            <path d="M144 88 l-7 -7 M196 88 l7 -7 M134 114 h-9 M206 114 h9" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round"/>
-            <text x="170" y="168" text-anchor="middle" class="svg-t">election timeout</text>
-            <text x="170" y="183" text-anchor="middle" class="svg-tm">150–300 ms</text>
-            <path d="M206 102 C226 98, 244 92, 262 84" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
-            <use href="#ico-server" x="246" y="36" width="84" height="84" style="--fill:var(--c-pink)"/>
-            <text x="288" y="138" text-anchor="middle" class="svg-t">candidate</text>
-            <text x="288" y="153" text-anchor="middle" class="svg-tm">term 3</text>
-          </svg>
-          <figcaption>Yellow: the egg timer, because the first one to run out picks the candidate (pink from here on).</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> The chair keeps sending a short <strong>"still here"</strong> note. A member that hears nothing before its egg timer runs out runs for chair.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> A heartbeat is an <code>AppendEntries</code> RPC with no entries. A follower that gets none within its election timeout adds 1 to its <code>currentTerm</code>, becomes a candidate, votes for itself and sends <code>RequestVote</code> to every other server. Each server picks its timeout at random, say from 150–300 ms, so one usually fires alone.</p></div>
-          <div class="tags"><span class="tag">committee = cluster</span><span class="tag">member = server</span><span class="tag">chair = leader</span><span class="tag">"still here" note = heartbeat</span><span class="tag">egg timer = election timeout</span><span class="tag">running for chair = candidate</span></div>
-        </div>
+  <!-- 1 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="The leader s1 is cut off, its heartbeat never arrives, and follower s3's election timer runs out">
+        <circle cx="52" cy="72" r="14" class="f-surface s-line" stroke-width="2"/>
+        <rect x="30" y="92" width="44" height="44" rx="16" class="f-surface s-line" stroke-width="2"/>
+        <text x="52" y="158" text-anchor="middle" class="svg-t">s1</text>
+        <text x="52" y="174" text-anchor="middle" class="svg-tm">leader</text>
+        <path d="M78 104 C86 98, 90 94, 98 92" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="100" y="74" width="50" height="34" rx="4" class="f-surface s-line" stroke-width="2"/>
+        <path d="M102 76 L125 94 L148 76" fill="none" class="s-line" stroke-width="2"/>
+        <text x="125" y="128" text-anchor="middle" class="svg-tm">heartbeat</text>
+        <path d="M160 108 L170 76 M170 108 L180 76" class="s-muted" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="241" y="34" width="18" height="14" rx="3" class="f-ink"/>
+        <circle cx="250" cy="110" r="60" class="f-surface s-ink" stroke-width="3"/>
+        <circle cx="250" cy="110" r="48" class="f-accent"/>
+        <path d="M250 110 L250 70" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="250" cy="110" r="5" class="f-ink"/>
+        <text x="250" y="192" text-anchor="middle" class="svg-t">election timeout</text>
+        <text x="250" y="208" text-anchor="middle" class="svg-tm">s3 · 150–300 ms</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">1</div><h2>The leader goes quiet, and a follower's timer runs out</h2></div>
+      <p>Your servers act like a committee. The <b>chair</b> keeps sending every member a short “still here” memo. When s1 drops off the network, the memos stop. Each member has its own timer, and s3's runs out first.</p>
+      <p>The memo is a <b>heartbeat</b>: an <code>AppendEntries</code> call with no entries. A follower that hears none within its <code>election timeout</code> becomes a <b>candidate</b> and asks the others for votes. Each server picks its timeout at random, for example from 150–300 ms, so usually only one fires.</p>
+      <div class="tags">
+        <span class="tag">committee = cluster</span>
+        <span class="tag">chair = leader</span>
+        <span class="tag">member = follower</span>
+        <span class="tag">“still here” memo = heartbeat</span>
+        <span class="tag">timer = election timeout</span>
       </div>
-    </li>
-
-    <li class="wrap zoom">
-      <h2>A candidate needs a majority, and each server votes once per term.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 340 202" role="img" aria-label="A pink candidate for term 3 sends RequestVote along a dashed curve to a green follower. The follower sends back a ticked ballot on a solid arrow toward the slot of a yellow ballot box. Three of the five squares on the box are ticked, and the box reads 3 of 5.">
-            <path d="M64 72 C96 20, 210 14, 258 44" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
-            <text x="156" y="32" text-anchor="middle" class="t">RequestVote</text>
-            <use href="#ico-server" x="10" y="70" width="84" height="84" style="--fill:var(--c-pink)"/>
-            <text x="52" y="172" text-anchor="middle" class="svg-t">candidate</text>
-            <text x="52" y="187" text-anchor="middle" class="svg-tm">term 3</text>
-            <use href="#ico-server" x="248" y="34" width="84" height="84"/>
-            <text x="290" y="134" text-anchor="middle" class="svg-t">follower</text>
-            <text x="290" y="149" text-anchor="middle" class="svg-tm">voteGranted</text>
-            <path d="M264 86 C242 72, 222 68, 198 70" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
-            <g transform="translate(158 54) rotate(-10)">
-              <rect width="28" height="34" rx="3" class="f-surface s-ink" stroke-width="2.5"/>
-              <path d="M7 18 l5 5 l9 -11" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </g>
-            <rect x="120" y="110" width="104" height="80" rx="8" class="f-accent s-ink" stroke-width="3"/>
-            <rect x="112" y="96" width="120" height="18" rx="5" class="f-accent s-ink" stroke-width="3"/>
-            <rect x="148" y="102" width="48" height="6" rx="3" class="f-ink"/>
-            <rect x="131" y="124" width="14" height="14" rx="2" class="f-surface s-ink" stroke-width="2"/>
-            <rect x="149" y="124" width="14" height="14" rx="2" class="f-surface s-ink" stroke-width="2"/>
-            <rect x="167" y="124" width="14" height="14" rx="2" class="f-surface s-ink" stroke-width="2"/>
-            <rect x="185" y="124" width="14" height="14" rx="2" class="f-surface s-ink" stroke-width="2"/>
-            <rect x="203" y="124" width="14" height="14" rx="2" class="f-surface s-ink" stroke-width="2"/>
-            <path d="M134 131 l3 3 l5 -6 M152 131 l3 3 l5 -6 M170 131 l3 3 l5 -6" fill="none" class="s-ink" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="172" y="172" text-anchor="middle" class="svg-ta">3 of 5</text>
-          </svg>
-          <figcaption>Yellow: the tally, because the winner needs 3 of 5 ballots. The winner turns blue as the leader.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> Each election gets a new <strong>term</strong> number. A member gives one ballot per term, to the first candidate who asks, unless that candidate's notebook is behind its own. Three ballots of five win.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> <code>RequestVote</code> carries the candidate's <code>term</code>, <code>lastLogIndex</code> and <code>lastLogTerm</code>. A server grants it if its <code>votedFor</code> is empty and the candidate's last entry has a later term, or the same term and an index at least as high. A split vote times out and retries in a higher term.</p></div>
-          <div class="tags"><span class="tag">ballot = RequestVote</span><span class="tag">term number = term</span><span class="tag">notebook = log</span></div>
-          <p class="big">Any two majorities share a server, so a term never has two leaders.</p>
-        </div>
-      </div>
-    </li>
-
-    <li class="wrap zoom">
-      <h2>The leader writes your command as a new line and sends it to every follower.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 340 222" role="img" aria-label="The blue leader, s1, has a notebook with lines 5, 6 and 7; line 7, SET x=5 in term 3, is new. An envelope labelled AppendEntries travels on a solid arrow to the green follower, s2. A yellow tag on the envelope reads prev 6, t3. The follower's notebook has lines 5 and 6, line 6 is ticked as a match, and line 7 is an empty slot.">
-            <text x="170" y="20" text-anchor="middle" class="svg-tm">AppendEntries</text>
-            <path d="M70 46 H266" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
-            <use href="#ico-server" x="6" y="8" width="76" height="76" style="--fill:var(--c-blue)"/>
-            <text x="44" y="100" text-anchor="middle" class="svg-tm">leader</text>
-            <use href="#ico-server" x="258" y="8" width="76" height="76"/>
-            <text x="296" y="100" text-anchor="middle" class="svg-tm">follower</text>
-            <g transform="translate(136 28)">
-              <rect width="68" height="40" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
-              <path d="M3 4 L34 24 L65 4" fill="none" class="s-ink" stroke-width="2.5" stroke-linejoin="round"/>
-            </g>
-            <path d="M170 68 V76" fill="none" class="s-ink" stroke-width="2"/>
-            <rect x="124" y="76" width="92" height="24" rx="5" class="f-accent s-ink" stroke-width="2"/>
-            <text x="170" y="92.5" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-weight:600">prev 6 · t3</text>
-            <rect x="10" y="110" width="120" height="100" rx="6" class="f-surface"/>
-            <path d="M10 128 V116 a6 6 0 0 1 6 -6 H124 a6 6 0 0 1 6 6 V128 Z" style="fill:var(--c-blue)"/>
-            <rect x="10" y="110" width="120" height="100" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-            <path d="M10 128 H130" fill="none" class="s-ink" stroke-width="2"/>
-            <text x="18" y="123" text-anchor="start" class="svg-tm">s1</text>
-            <text x="18" y="148" text-anchor="start" class="svg-t">5 t2 SET y=1</text>
-            <text x="18" y="172" text-anchor="start" class="svg-t">6 t3 SET z=4</text>
-            <rect x="14" y="181" width="112" height="22" rx="4" class="f-bg"/>
-            <text x="18" y="196" text-anchor="start" class="svg-t" style="font-weight:600">7 t3 SET x=5</text>
-            <rect x="210" y="110" width="120" height="100" rx="6" class="f-surface"/>
-            <path d="M210 128 V116 a6 6 0 0 1 6 -6 H324 a6 6 0 0 1 6 6 V128 Z" style="fill:var(--c-green)"/>
-            <rect x="210" y="110" width="120" height="100" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-            <path d="M210 128 H330" fill="none" class="s-ink" stroke-width="2"/>
-            <text x="218" y="123" text-anchor="start" class="svg-tm">s2</text>
-            <text x="218" y="148" text-anchor="start" class="svg-t">5 t2 SET y=1</text>
-            <text x="218" y="172" text-anchor="start" class="svg-t">6 t3 SET z=4</text>
-            <path d="M313 166 l4 4 l8 -9" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--yes)"/>
-            <rect x="216" y="181" width="108" height="22" rx="4" fill="none" class="s-muted" stroke-width="1.5" stroke-dasharray="4 4"/>
-          </svg>
-          <figcaption>Yellow: the tag, because the follower adds line 7 only if its own line 6 is from term 3.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> The chair writes <code>SET x=5</code> as line 7 and sends it in a note. The note also says what line 6 should look like. A member whose line 6 matches copies line 7; otherwise it says no, and the chair resends from an earlier line.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> Each entry stores its command and its term. A follower rejects an <code>AppendEntries</code> whose <code>prevLogIndex</code> and <code>prevLogTerm</code> it lacks; the leader lowers its <code>nextIndex</code> for that follower and retries, and the follower drops conflicting entries. So logs that agree on one entry agree on everything before it.</p></div>
-<pre><code>AppendEntries {
-  term: 3, leaderId: "s1",
-  prevLogIndex: 6, prevLogTerm: 3,
-  entries: [
-    { term: 3, command: "SET x=5" }
-  ],
-  leaderCommit: 6
-}</code></pre>
-          <div class="tags"><span class="tag">line = log entry</span><span class="tag">note = AppendEntries</span></div>
-        </div>
-      </div>
-    </li>
-
-    <li class="wrap zoom">
-      <h2>A line is final once a majority has it, and then every server applies it.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 340 234" role="img" aria-label="Five notebooks, s1 to s5, stand in a row; s1 has a blue cover as the leader. A yellow strip runs across line 7, x=5, in s1, s2 and s3. s4 and s5 are lagging, with an empty slot for line 7. A solid arrow labelled commitIndex = 7 leads down to a state machine that now holds x = 5, and a dashed curve labelled OK goes to your laptop.">
-            <g transform="translate(12 14)">
-              <rect width="56" height="86" rx="6" class="f-surface"/>
-              <path d="M0 18 V6 a6 6 0 0 1 6 -6 H50 a6 6 0 0 1 6 6 V18 Z" style="fill:var(--c-blue)"/>
-              <rect width="56" height="86" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-              <path d="M0 18 H56" fill="none" class="s-ink" stroke-width="2"/>
-              <text x="28" y="13" text-anchor="middle" class="svg-tm">s1</text>
-              <text x="8" y="40" text-anchor="start" class="svg-t">6 z=4</text>
-            </g>
-            <g transform="translate(77 14)">
-              <rect width="56" height="86" rx="6" class="f-surface"/>
-              <path d="M0 18 V6 a6 6 0 0 1 6 -6 H50 a6 6 0 0 1 6 6 V18 Z" style="fill:var(--c-green)"/>
-              <rect width="56" height="86" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-              <path d="M0 18 H56" fill="none" class="s-ink" stroke-width="2"/>
-              <text x="28" y="13" text-anchor="middle" class="svg-tm">s2</text>
-              <text x="8" y="40" text-anchor="start" class="svg-t">6 z=4</text>
-            </g>
-            <g transform="translate(142 14)">
-              <rect width="56" height="86" rx="6" class="f-surface"/>
-              <path d="M0 18 V6 a6 6 0 0 1 6 -6 H50 a6 6 0 0 1 6 6 V18 Z" style="fill:var(--c-green)"/>
-              <rect width="56" height="86" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-              <path d="M0 18 H56" fill="none" class="s-ink" stroke-width="2"/>
-              <text x="28" y="13" text-anchor="middle" class="svg-tm">s3</text>
-              <text x="8" y="40" text-anchor="start" class="svg-t">6 z=4</text>
-            </g>
-            <g transform="translate(207 14)">
-              <rect width="56" height="86" rx="6" class="f-surface"/>
-              <path d="M0 18 V6 a6 6 0 0 1 6 -6 H50 a6 6 0 0 1 6 6 V18 Z" style="fill:var(--c-green)"/>
-              <rect width="56" height="86" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-              <path d="M0 18 H56" fill="none" class="s-ink" stroke-width="2"/>
-              <text x="28" y="13" text-anchor="middle" class="svg-tm">s4</text>
-              <text x="8" y="40" text-anchor="start" class="svg-t">6 z=4</text>
-              <rect x="6" y="50" width="44" height="22" rx="4" fill="none" class="s-muted" stroke-width="1.5" stroke-dasharray="4 4"/>
-            </g>
-            <g transform="translate(272 14)">
-              <rect width="56" height="86" rx="6" class="f-surface"/>
-              <path d="M0 18 V6 a6 6 0 0 1 6 -6 H50 a6 6 0 0 1 6 6 V18 Z" style="fill:var(--c-green)"/>
-              <rect width="56" height="86" rx="6" fill="none" class="s-ink" stroke-width="2.5"/>
-              <path d="M0 18 H56" fill="none" class="s-ink" stroke-width="2"/>
-              <text x="28" y="13" text-anchor="middle" class="svg-tm">s5</text>
-              <text x="8" y="40" text-anchor="start" class="svg-t">6 z=4</text>
-              <rect x="6" y="50" width="44" height="22" rx="4" fill="none" class="s-muted" stroke-width="1.5" stroke-dasharray="4 4"/>
-            </g>
-            <rect x="8" y="62" width="194" height="26" rx="7" class="f-accent s-ink" stroke-width="2"/>
-            <text x="20" y="80" text-anchor="start" class="svg-t" style="fill:var(--accent-ink);font-weight:600">7 x=5</text>
-            <text x="85" y="80" text-anchor="start" class="svg-t" style="fill:var(--accent-ink);font-weight:600">7 x=5</text>
-            <text x="150" y="80" text-anchor="start" class="svg-t" style="fill:var(--accent-ink);font-weight:600">7 x=5</text>
-            <text x="267" y="118" text-anchor="middle" class="svg-tm">lagging</text>
-            <path d="M106 90 V134" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
-            <text x="116" y="118" text-anchor="start" class="svg-t">commitIndex = 7</text>
-            <use href="#ico-db" x="64" y="128" width="84" height="84"/>
-            <text x="106" y="195" text-anchor="middle" class="svg-tb">x = 5</text>
-            <text x="106" y="224" text-anchor="middle" class="svg-tm">state machine</text>
-            <path d="M150 176 C178 156, 214 152, 248 166" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
-            <text x="196" y="148" text-anchor="middle" class="svg-t">OK</text>
-            <use href="#ico-laptop" x="236" y="130" width="84" height="84"/>
-            <text x="278" y="224" text-anchor="middle" class="svg-tm">you</text>
-          </svg>
-          <figcaption>Yellow: line 7 on a majority of notebooks, because that makes it committed while s4 and s5 lag.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> Once three of five notebooks hold line 7, no later chair can lose it. The chair carries it out and answers you <strong>OK</strong>. Its next notes tell the others to carry it out too.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> The leader moves <code>commitIndex</code> to 7, the highest entry from its own term that a majority holds (it tracks a <code>matchIndex</code> per follower). It applies the entry to its state machine, then replies. Later <code>AppendEntries</code> carry <code>leaderCommit</code>, and followers apply up to it in log order.</p></div>
-          <div class="tags"><span class="tag">final line = committed entry</span><span class="tag">carry out = apply to state machine</span></div>
-          <p class="big">A write is done when three of five have it, not all five.</p>
-        </div>
-      </div>
-    </li>
-  </ol>
-
-  <section class="catch">
-    <div class="wrap">
-      <h2>An old leader does not know it was replaced.</h2>
-      <p>Cut off from the majority, it still thinks it leads, so a read it serves can be stale. Before answering a read, a Raft leader must hear back from a majority in one heartbeat round.</p>
     </div>
   </section>
 
-  <section class="wrap further">
-    <h2>Push further</h2>
-    <details><summary>Why do clusters have 3 or 5 servers, not 4?</summary><p>Four servers need three for a majority, so they survive one failure, the same as three. Five servers survive two.</p></details>
-    <details><summary>What happens when the network splits into 2 and 3?</summary><p>The three elect a leader in a higher term and keep writing; the two commit nothing. After the split heals, the old leader sees the higher term, steps down and loses its uncommitted lines.</p></details>
-    <details><summary>Can a new leader commit an old leader's line by counting copies?</summary><p>No. A leader counts copies only for lines from its own term; older lines are committed along with a later line from its term. The paper's Figure 8 shows why.</p></details>
+  <!-- 2 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="Candidate s3 sends RequestVote to the others; three of five votes land in the ballot box and make s3 the leader of term 4">
+        <circle cx="58" cy="70" r="15" class="f-surface s-ink" stroke-width="3"/>
+        <rect x="34" y="92" width="48" height="48" rx="18" class="f-surface s-ink" stroke-width="3"/>
+        <text x="58" y="162" text-anchor="middle" class="svg-t">s3</text>
+        <text x="58" y="178" text-anchor="middle" class="svg-tm">candidate</text>
+        <text x="58" y="194" text-anchor="middle" class="svg-tm">term 4</text>
+        <path d="M88 112 C116 98, 146 98, 172 106" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <text x="130" y="88" text-anchor="middle" class="svg-t">RequestVote</text>
+        <rect x="226" y="22" width="40" height="30" rx="4" class="f-surface s-ink" stroke-width="2"/>
+        <rect x="234" y="31" width="24" height="5" rx="2.5" class="f-line"/>
+        <rect x="234" y="40" width="16" height="5" rx="2.5" class="f-line"/>
+        <rect x="180" y="62" width="140" height="104" rx="12" class="f-surface s-ink" stroke-width="2.5"/>
+        <rect x="216" y="56" width="60" height="10" rx="5" class="f-ink"/>
+        <rect x="188" y="96" width="20" height="20" rx="4" class="f-accent"/>
+        <rect x="214" y="96" width="20" height="20" rx="4" class="f-accent"/>
+        <rect x="240" y="96" width="20" height="20" rx="4" class="f-accent"/>
+        <rect x="266" y="96" width="20" height="20" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <rect x="292" y="96" width="20" height="20" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <text x="198" y="136" text-anchor="middle" class="svg-tm">s3</text>
+        <text x="224" y="136" text-anchor="middle" class="svg-tm">s2</text>
+        <text x="250" y="136" text-anchor="middle" class="svg-tm">s4</text>
+        <text x="276" y="136" text-anchor="middle" class="svg-tm">s5</text>
+        <text x="302" y="136" text-anchor="middle" class="svg-tm">s1</text>
+        <text x="250" y="190" text-anchor="middle" class="svg-t">3 of 5 = leader</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">2</div><h2>The candidate asks for votes, and three of five make it leader</h2></div>
+      <p>Each election gets a new <b>term</b> number, here term 4. A member gives one vote per term, to the first candidate who asks. Every member also keeps a copy of the committee's <b>notebook</b>. It says no if the candidate's copy is behind its own.</p>
+      <p>The candidate adds 1 to <code>currentTerm</code>, votes for itself and sends <code>RequestVote</code>. A log is ahead if its last entry has a later <code>term</code>, or the same term and a higher index. With no majority, the timers run out again, and a new term starts.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>The voter sees</th><th>Vote</th></tr></thead>
+          <tbody>
+            <tr><td>a <code>term</code> older than its own</td><td><span class="pill no">no</span></td></tr>
+            <tr><td><code>votedFor</code> names someone else this term</td><td><span class="pill no">no</span></td></tr>
+            <tr><td>a log behind its own, by <code>lastLogTerm</code>, then <code>lastLogIndex</code></td><td><span class="pill no">no</span></td></tr>
+            <tr><td>none of these</td><td><span class="pill yes">yes</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tags">
+        <span class="tag">notebook = log</span>
+        <span class="tag">vote = voteGranted</span>
+      </div>
+      <p class="big-idea">Any two majorities of five share a server, so one term never has two leaders.</p>
+    </div>
   </section>
 
-  <footer class="wrap colophon">
-    <p><strong>Simplified on purpose.</strong> Left out: membership changes, snapshots, disk writes and how clients find the leader.</p>
-    <p>Sources: Ongaro and Ousterhout, <a href="https://raft.github.io/raft.pdf">In Search of an Understandable Consensus Algorithm (Extended Version)</a>, Figure 2 and sections 5, 8 and 9.3; <a href="https://raft.github.io/">raft.github.io</a>. Names, terms, indexes and commands are examples.</p>
-  </footer>
+  <!-- 3 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="Leader s3 sends line 7 to follower s4 in an AppendEntries memo tagged with line 6 from term 3, which s4 must already hold">
+        <rect x="12" y="26" width="116" height="150" rx="10" class="f-surface s-ink" stroke-width="3"/>
+        <text x="70" y="50" text-anchor="middle" class="svg-tb">s3 · leader</text>
+        <rect x="20" y="62" width="100" height="24" rx="5" class="f-bg"/>
+        <text x="28" y="78" text-anchor="start" class="svg-t">5  t2</text>
+        <rect x="20" y="92" width="100" height="24" rx="5" class="f-bg"/>
+        <text x="28" y="108" text-anchor="start" class="svg-t">6  t3</text>
+        <rect x="20" y="122" width="100" height="24" rx="5" class="f-surface s-ink" stroke-width="2"/>
+        <text x="27" y="138" text-anchor="start" class="svg-t">7 t4 SET x=5</text>
+        <rect x="212" y="26" width="116" height="150" rx="10" class="f-surface s-line" stroke-width="2"/>
+        <text x="270" y="50" text-anchor="middle" class="svg-tb">s4</text>
+        <rect x="220" y="62" width="100" height="24" rx="5" class="f-bg"/>
+        <text x="228" y="78" text-anchor="start" class="svg-t">5  t2</text>
+        <rect x="220" y="92" width="100" height="24" rx="5" class="f-bg"/>
+        <text x="228" y="108" text-anchor="start" class="svg-t">6  t3</text>
+        <rect x="220" y="122" width="100" height="24" rx="5" fill="none" class="s-line" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M128 134 H212" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <text x="170" y="68" text-anchor="middle" class="svg-tm">prev entry</text>
+        <rect x="138" y="76" width="64" height="24" rx="5" class="f-accent"/>
+        <text x="170" y="93" text-anchor="middle" class="svg-ta">6 · t3</text>
+        <path d="M170 100 V116" class="s-ink" stroke-width="2"/>
+        <rect x="146" y="116" width="48" height="36" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+        <path d="M148 118 L170 135 L192 118" fill="none" class="s-ink" stroke-width="2.5"/>
+        <text x="170" y="200" text-anchor="middle" class="svg-t">AppendEntries</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">3</div><h2>The leader writes your command and sends it to every follower</h2></div>
+      <p>You send <code>SET x=5</code> to s3. The chair writes it as <b>line 7</b> and sends a memo. The memo also says what line 6 should look like. A member whose line 6 matches copies line 7. Otherwise it says no, and the chair resends from an earlier line.</p>
+      <p>A follower refuses new entries unless its log has <code>prevLogTerm</code> at <code>prevLogIndex</code>. After a no, the leader lowers its <code>nextIndex</code> for that follower and retries. So two logs that agree on one entry agree on everything before it.</p>
+<pre>AppendEntries {               // example values
+  term: 4, leaderId: "s3",
+  prevLogIndex: 6, prevLogTerm: 3,
+  entries: [{ term: 4, command: "SET x=5" }],
+  leaderCommit: 6
+}</pre>
+      <div class="tags">
+        <span class="tag">line = log entry</span>
+        <span class="tag">memo = AppendEntries</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="Line 7 from term 4 sits in the logs of s2, s3 and s4, a majority of five, so the leader applies it and its state machine now holds x = 5">
+        <text x="67" y="28" text-anchor="middle" class="svg-tm">5</text>
+        <text x="101" y="28" text-anchor="middle" class="svg-tm">6</text>
+        <text x="135" y="28" text-anchor="middle" class="svg-tm">7</text>
+        <text x="30" y="53" text-anchor="middle" class="svg-tm">s1</text>
+        <rect x="52" y="38" width="30" height="22" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <rect x="86" y="38" width="30" height="22" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <rect x="120" y="38" width="30" height="22" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <text x="67" y="53" text-anchor="middle" class="svg-tm">t2</text>
+        <text x="101" y="53" text-anchor="middle" class="svg-tm">t3</text>
+        <text x="135" y="53" text-anchor="middle" class="svg-tm">t3</text>
+        <text x="30" y="83" text-anchor="middle" class="svg-t">s2</text>
+        <rect x="52" y="68" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="86" y="68" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="120" y="68" width="30" height="22" rx="4" class="f-accent"/>
+        <text x="67" y="83" text-anchor="middle" class="svg-t">t2</text>
+        <text x="101" y="83" text-anchor="middle" class="svg-t">t3</text>
+        <text x="135" y="84" text-anchor="middle" class="svg-ta">t4</text>
+        <text x="30" y="114" text-anchor="middle" class="svg-tb">s3</text>
+        <rect x="52" y="98" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="86" y="98" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="120" y="98" width="30" height="22" rx="4" class="f-accent"/>
+        <text x="67" y="113" text-anchor="middle" class="svg-t">t2</text>
+        <text x="101" y="113" text-anchor="middle" class="svg-t">t3</text>
+        <text x="135" y="114" text-anchor="middle" class="svg-ta">t4</text>
+        <text x="30" y="143" text-anchor="middle" class="svg-t">s4</text>
+        <rect x="52" y="128" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="86" y="128" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="120" y="128" width="30" height="22" rx="4" class="f-accent"/>
+        <text x="67" y="143" text-anchor="middle" class="svg-t">t2</text>
+        <text x="101" y="143" text-anchor="middle" class="svg-t">t3</text>
+        <text x="135" y="144" text-anchor="middle" class="svg-ta">t4</text>
+        <text x="30" y="173" text-anchor="middle" class="svg-t">s5</text>
+        <rect x="52" y="158" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="86" y="158" width="30" height="22" rx="4" class="f-bg"/>
+        <rect x="120" y="158" width="30" height="22" rx="4" fill="none" class="s-line" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="67" y="173" text-anchor="middle" class="svg-t">t2</text>
+        <text x="101" y="173" text-anchor="middle" class="svg-t">t3</text>
+        <text x="93" y="204" text-anchor="middle" class="svg-t">commitIndex = 7</text>
+        <path d="M154 109 H198" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+        <text x="176" y="100" text-anchor="middle" class="svg-tm">apply</text>
+        <rect x="200" y="64" width="122" height="90" rx="12" class="f-surface s-ink" stroke-width="3"/>
+        <rect x="212" y="80" width="98" height="50" rx="6" class="f-bg"/>
+        <text x="261" y="110" text-anchor="middle" class="svg-tb">x = 5</text>
+        <text x="261" y="174" text-anchor="middle" class="svg-tm">state machine</text>
+        <text x="261" y="190" text-anchor="middle" class="svg-tm">then replies OK</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">4</div><h2>A line is final once three of five have it</h2></div>
+      <p>Now s2, s3 and s4 hold line 7. Any later chair needs a vote from one of them, and they refuse a candidate whose notebook is behind. So line 7 can never be lost. The chair carries it out, sets x to 5 and answers you OK.</p>
+      <p>The leader tracks a <code>matchIndex</code> per follower. It moves <code>commitIndex</code> to 7, the highest entry from its own term that a majority holds. Later memos carry <code>leaderCommit</code>, and followers apply up to it, in log order.</p>
+      <div class="tags">
+        <span class="tag">final = committed</span>
+        <span class="tag">carry out = apply to state machine</span>
+      </div>
+      <p class="big-idea">A write is done when three of five have it, not all five.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="A memo from s3 carries term 4; s1 becomes a follower and replaces its own line 7 from term 3 with s3's line 7">
+        <rect x="20" y="58" width="84" height="56" rx="5" class="f-surface s-ink" stroke-width="2.5"/>
+        <path d="M22 60 L62 90 L102 60" fill="none" class="s-ink" stroke-width="2.5"/>
+        <path d="M62 114 V124" class="s-ink" stroke-width="2"/>
+        <rect x="28" y="124" width="68" height="26" rx="5" class="f-accent"/>
+        <text x="62" y="142" text-anchor="middle" class="svg-ta">term 4</text>
+        <text x="62" y="172" text-anchor="middle" class="svg-tm">from s3</text>
+        <path d="M108 88 C124 82, 140 84, 154 92" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="160" y="22" width="162" height="176" rx="10" class="f-surface s-ink" stroke-width="3"/>
+        <text x="241" y="46" text-anchor="middle" class="svg-tb">s1 · follower</text>
+        <rect x="172" y="58" width="138" height="24" rx="5" class="f-bg"/>
+        <text x="180" y="74" text-anchor="start" class="svg-t">5  t2</text>
+        <rect x="172" y="88" width="138" height="24" rx="5" class="f-bg"/>
+        <text x="180" y="104" text-anchor="start" class="svg-t">6  t3</text>
+        <rect x="172" y="118" width="138" height="24" rx="5" class="f-bg"/>
+        <text x="180" y="134" text-anchor="start" class="svg-tm">7  t3 SET y=1</text>
+        <path d="M176 130 H302" class="s-muted" stroke-width="2"/>
+        <rect x="172" y="152" width="138" height="24" rx="5" class="f-surface s-ink" stroke-width="2"/>
+        <text x="180" y="168" text-anchor="start" class="svg-t">7  t4 SET x=5</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">5</div><h2>The old leader comes back, sees a higher term and steps down</h2></div>
+      <p>s1's network returns, and it still thinks it chairs term 3. While cut off, it wrote <code>SET y=1</code> as its own line 7. Nobody else has that line, and nobody got an OK for it.</p>
+      <p>A server that sees a higher <code>term</code> in any request or reply takes that term and becomes a follower. s3's next memo carries line 7 from term 4. s1's line 7 has the same index but a different term, so s1 deletes it and copies s3's.</p>
+      <div class="ba">
+        <div>
+          <h3>Before</h3>
+          <ul>
+            <li>s1 thinks it leads term 3.</li>
+            <li>Its line 7 is <code>SET y=1</code>, on 1 of 5.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>After</h3>
+          <ul>
+            <li>s1 follows s3 in term 4.</li>
+            <li>Its line 7 is <code>SET x=5</code>, like s3's.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="status" aria-labelledby="end">
+    <h2 id="end">Before you rely on it</h2>
+    <ul>
+      <li><span class="pill no">catch</span><span>A cut-off leader still thinks it leads, as s1 did. If it answers reads from its own copy, a read can be stale. Before it answers a read, a Raft leader must hear back from a majority in one heartbeat round.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Why 3 or 5 servers, not 4?</b> Four need three for a majority, so they survive one failure, like three. Five survive two.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Can a new leader commit an old leader's line by counting copies?</b> No. It counts copies only for lines from its own term. Older lines become final along with a later line from its term (the paper's Figure 8).</span></li>
+      <li><span class="pill new">ask next</span><span><b>What if the leader commits but crashes before it answers?</b> The client retries with the new leader, so the command can run twice. Clients tag each command with a serial number, and the state machine skips repeats.</span></li>
+      <li><span class="pill new">simplified</span><span>Left out: membership changes, snapshots, disk writes and how clients find the leader. Server names, terms and line numbers are examples.</span></li>
+      <li><span class="pill yes">sources</span><span>Ongaro and Ousterhout, <a href="https://raft.github.io/raft.pdf">In Search of an Understandable Consensus Algorithm (Extended Version)</a>, Figure 2 and sections 5, 8 and 9.3; <a href="https://raft.github.io/">raft.github.io</a>.</span></li>
+    </ul>
+  </section>
+
 </main>
 </body>
 </html>

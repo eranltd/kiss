@@ -2,527 +2,388 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How a Name Resolves</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How DNS Finds Addresses</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: a printed manual marked up in red pen. The hero shows the whole cast at a glance; each zoom draws one part with the same characters, then says it twice: in plain words and under the hood. */
-:root{
-  --paper:oklch(98.4% .005 250); --paper-2:oklch(95.4% .007 250); --ink:oklch(22% .03 258); --ink-2:oklch(38% .025 258);
-  --muted:oklch(47% .02 258); --rule:oklch(87% .009 250); --accent:oklch(54% .19 33);
-  --band:var(--ink); --band-ink:var(--paper); --band-chip:oklch(31% .03 258);
-  --c-blue:oklch(86% .07 240); --c-green:oklch(88% .08 150); --c-yellow:oklch(92% .1 95); --c-pink:oklch(87% .07 10); --c-gray:oklch(92% .01 250);
-  --serif:"Newsreader",ui-serif,Georgia,serif; --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  --space-xs:8px; --space-sm:12px; --space-md:16px; --space-lg:24px; --space-xl:40px; --space-2xl:64px;
-  --space-section:clamp(4rem,2rem + 8vw,9rem); --gutter:clamp(1rem,4vw,4rem); --hang:clamp(2.25rem,1rem + 5vw,6rem);
-  --text-sm:.9375rem; --text-md:1rem; --text-plain:clamp(1.125rem,1rem + .55vw,1.375rem); --text-lead:clamp(1.25rem,1rem + 1vw,1.625rem);
-  --text-section:clamp(1.625rem,1.1rem + 1.9vw,2.625rem); --text-statement:clamp(2rem,1.1rem + 3.2vw,3.5rem); --text-display:clamp(2.375rem,1.2rem + 4.2vw,4.25rem);
-  color-scheme:light;
+/* Layout: a story told top to bottom, one stamped step per stop, picture left, few words right */
+:root {
+  --bg: #F0EEE6;
+  --surface: #FFFFFF;
+  --ink: #141413;
+  --muted: #5F5D57;
+  --line: #D6D2C6;
+  --accent: #D97757;
+  --accent-ink: #1F0C04;
+  --yes: #4E6B38;
+  --no: #A8323E;
+  --font-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
-  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
-  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
-  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
-  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
-  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
-  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
-  color-scheme:dark;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+    --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+    color-scheme: dark;
+  }
 }
-*,*::before,*::after{box-sizing:border-box;margin:0}
-html,body{overflow-x:clip}
-body{background:var(--paper);color:var(--ink);font:400 var(--text-plain)/1.6 var(--serif);-webkit-font-smoothing:antialiased}
-.wrap{max-width:75rem;margin-inline:auto;padding-inline:var(--gutter);display:grid;grid-template-columns:var(--hang) minmax(0,1fr)}
-.wrap>*{grid-column:1/-1;min-width:0}
-@media (min-width:48rem){.wrap>*{grid-column:2}}
-h1,h2{font-family:var(--serif);font-weight:600;text-wrap:balance;overflow-wrap:break-word}
-h1{font-size:var(--text-display);line-height:1.04;letter-spacing:-.022em;max-width:22ch}
-h2{font-size:var(--text-section);line-height:1.12;letter-spacing:-.015em;max-width:30ch}
-p{text-wrap:pretty;max-width:60ch}
-strong{font-weight:600}
-a{color:inherit;text-decoration-color:var(--accent);text-decoration-thickness:1.5px;text-underline-offset:.2em}
-a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-code{font:400 .86em/1 var(--mono);background:var(--paper-2);padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}
-pre{font:400 var(--text-sm)/1.6 var(--mono);background:var(--paper-2);padding:var(--space-md);border-radius:3px;overflow-x:auto;max-width:60ch}
-pre code{font-size:inherit;background:none;padding:0}
-
-.hero{padding-block:var(--space-section) var(--space-2xl)}
-.lede{font-size:var(--text-lead);line-height:1.45;color:var(--muted);max-width:44ch;margin-top:var(--space-lg)}
-
-/* The glance: the whole cast in a row on wide screens, a column on phones. */
-.cast{list-style:none;padding:0;margin-top:var(--space-2xl);display:flex;flex-wrap:wrap;gap:var(--space-lg) var(--space-xl)}
-.cast li{position:relative;display:grid;justify-items:center;align-content:start;gap:4px;width:7.5rem;text-align:center;font:400 var(--text-sm)/1.3 var(--sans)}
-.cast li+li::before{content:"";position:absolute;left:calc(var(--space-xl) * -1 + 6px);top:1.9rem;width:calc(var(--space-xl) - 12px);height:12px;background:var(--ink-2);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat;
-          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat}
-.cast .ico{width:4.5rem;height:4.5rem;overflow:visible}
-.cast b{font-weight:600}
-.cast code{font-size:.8em}
-.cast li.hl::after{content:"";position:absolute;inset:-.7rem -.5rem;border:2.5px solid var(--accent);border-radius:46% 54% 42% 58%/56% 44% 56% 44%;transform:rotate(-4deg);pointer-events:none}
-@media (max-width:40rem){
-  .cast{flex-direction:column;gap:var(--space-xl)}
-  .cast li{width:auto;grid-template-columns:4rem minmax(0,1fr);justify-items:start;align-items:center;text-align:left;column-gap:var(--space-md)}
-  .cast li>:not(.ico){grid-column:2}
-  .cast li .ico{grid-row:1/span 2;width:4rem;height:4rem}
-  .cast li+li::before{left:1.4rem;top:calc(var(--space-xl) * -1 + 4px);width:calc(var(--space-xl) - 8px);height:12px;transform-origin:left center;transform:rotate(90deg) translateY(-50%)}
-  .cast li.hl::after{inset:-.6rem -.6rem;right:auto;width:min(100%,18rem)}
+:root[data-theme="dark"] {
+  --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+  --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+  color-scheme: dark;
 }
-.caption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted);margin-top:var(--space-lg)}
-.glance-words{margin-top:var(--space-md)}
 
-/* Zooms: a numbered list. The number hangs left of the claim; the drawing and the words sit side by side on wide screens. */
-.zooms{list-style:none;padding:0;counter-reset:zoom}
-.zoom{counter-increment:zoom;row-gap:var(--space-lg);padding-block:0 var(--space-section)}
-.zoom::before{content:"";grid-column:1/-1;border-top:2px solid var(--ink);margin-bottom:var(--space-xl)}
-.zoom h2{grid-column:2;position:relative}
-/* The step number is a red-pen stamp hanging in the margin. */
-.zoom h2::before{content:counter(zoom);position:absolute;right:calc(100% + var(--space-sm));top:.06em;width:1.45em;height:1.45em;display:grid;place-items:center;font-size:.78em;color:var(--accent);border:2px dashed var(--accent);border-radius:5px;background:color-mix(in oklab,var(--accent) 10%,transparent);transform:rotate(-4deg);font-variant-numeric:lining-nums tabular-nums}
-@media (min-width:48rem){.zoom h2::before{right:calc(100% + var(--space-lg))}}
-.zoom-body{display:grid;gap:var(--space-lg);align-items:start}
-@media (min-width:64rem){.zoom-body{grid-template-columns:minmax(0,31rem) minmax(0,1fr);gap:var(--space-2xl)}}
-.words{display:grid;gap:var(--space-md)}
-.hood{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);border-left:1px solid var(--rule);padding-left:var(--space-md)}
-.hood strong{color:var(--ink)}
-.hood ol{padding-left:1.2em;display:grid;gap:4px}
-.hood>*+*{margin-top:var(--space-xs)}
-.tags{display:flex;flex-wrap:wrap;gap:6px}
-.tag{font:400 .8rem/1.4 var(--mono);color:var(--ink-2);border:1px dashed var(--muted);border-radius:4px;padding:3px 8px;overflow-wrap:anywhere}
-.big{font:600 var(--text-lead)/1.3 var(--serif);border-left:3px solid var(--accent);padding-left:var(--space-md);max-width:40ch}
-.pill{display:inline-block;font:600 .75rem/1.6 var(--mono);color:var(--ink);border-radius:999px;padding:0 .6em;white-space:nowrap}
-.pill.yes{background:var(--c-green)}
-.pill.no{background:var(--c-pink)}
-.pill.new{background:var(--c-yellow)}
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; }
+.page { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; display: grid; gap: 56px; }
 
-/* Drawings: 400 units wide, so a phone shows them at about 80% with readable labels. */
-.drawing{display:grid;gap:var(--space-xs)}
-.drawing svg{display:block;width:100%;max-width:31rem;height:auto;overflow:visible}
-.drawing figcaption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted)}
-.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:url(#rough)}
-.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.dot{fill:var(--ink)}
-.wire{stroke:var(--ink-2);stroke-width:2;fill:none;stroke-linecap:round}
-.hot{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round}
-.cut{stroke-dasharray:6 6}
-.life{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 6;stroke-linecap:round}
-.pen{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
-.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
-.n{font:600 15px var(--sans);fill:var(--ink);text-anchor:middle}
-.t{font:400 13px var(--mono);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l{font:400 14px var(--sans);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l.h{fill:var(--accent);font-weight:600}
-.start{text-anchor:start}
-.end{text-anchor:end}
-.num-bg{fill:var(--ink)}
-.num{font:600 11px var(--mono);fill:var(--paper);text-anchor:middle}
-.tip{fill:var(--ink-2)}
-.tip-hot{fill:var(--accent)}
+/* hero */
+.hero { display: grid; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 6vw, 64px); line-height: 1.02; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.hero p { margin: 0; font-size: 20px; color: var(--muted); max-width: 60ch; }
+.hero b { color: var(--ink); }
 
-/* The catch: the one change of paper on the page. */
-.catch{background:var(--band);color:var(--band-ink);padding-block:var(--space-section)}
-.catch h2{font-size:var(--text-statement);line-height:1.06;max-width:20ch}
-.catch p{max-width:58ch;margin-top:var(--space-lg)}
-.catch code{background:var(--band-chip)}
+/* route strip */
+.route { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 13px; }
+.route span.stop { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.route span.arrow { color: var(--muted); }
 
-.further{padding-block:var(--space-section) 0}
-.further h2{margin-bottom:var(--space-lg)}
-.further details{border-top:1px solid var(--rule);padding-block:var(--space-md);max-width:48rem}
-.further details:last-child{border-bottom:1px solid var(--rule)}
-.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:600 var(--text-md)/1.5 var(--sans)}
-.further summary::-webkit-details-marker{display:none}
-.further summary::before{content:"+";font-family:var(--mono);color:var(--accent)}
-.further details[open] summary::before{content:"−"}
-.further details p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);margin:var(--space-xs) 0 0 1.5rem}
+/* steps */
+.step { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 36px; align-items: center; }
+.step + .step { border-top: 1px dashed var(--line); padding-top: 48px; }
+.pic { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.pic svg { display: block; width: 100%; height: auto; }
+.words { display: grid; gap: 12px; min-width: 0; }
+.head { display: flex; gap: 14px; align-items: center; }
+.stamp { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border: 2px dashed var(--accent); border-radius: 6px; font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--ink); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.stamp.why { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.small { margin: 0; font-size: 14px; color: var(--muted); }
+.reasons { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 62ch; }
+.reasons li::marker { font-family: var(--font-display); font-weight: 800; color: var(--muted); }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 3.2vw, 32px); line-height: 1.12; margin: 0; text-wrap: balance; }
+.words p { margin: 0; max-width: 62ch; }
+.big-idea { font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.3; border-left: 4px solid var(--accent); padding-left: 14px; }
 
-/* Decision pages only. */
-.compare{display:grid;gap:var(--space-xl)}
-.compare>*{border-top:1px solid var(--rule);padding-top:var(--space-md)}
-.compare>.pick{border-top:3px solid var(--accent)}
-.compare h3{font:600 var(--text-md)/1.4 var(--sans);margin-bottom:var(--space-xs)}
-.compare p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2)}
-@media (min-width:48rem){.compare{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.table{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font:400 var(--text-md)/1.5 var(--sans)}
-th,td{text-align:left;vertical-align:top;padding:var(--space-sm) var(--space-md) var(--space-sm) 0;border-bottom:1px solid var(--rule)}
-th{font-weight:600;color:var(--muted)}
+code, .tag { font-family: var(--font-mono); font-size: .82em; }
+code { background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 3px 8px; color: var(--muted); }
 
-.colophon{padding-block:var(--space-2xl) var(--space-section);font:400 var(--text-sm)/1.6 var(--sans);color:var(--muted)}
-.colophon p+p{margin-top:var(--space-xs)}
-.colophon strong{color:var(--ink)}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+/* small tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td code { overflow-wrap: break-word; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.pill.yes { background: color-mix(in srgb, var(--yes) 16%, transparent); color: var(--yes); }
+.pill.no { background: color-mix(in srgb, var(--no) 14%, transparent); color: var(--no); }
+.pill.new { background: color-mix(in srgb, var(--accent) 26%, transparent); color: var(--ink); }
 
-/* kiss skin: post office */
-/* Layout: a post-office story told top to bottom. The hero names the route as pills; each zoom is a stamped step, picture card left, few words right. */
-:root{
-  --bg:#F2F5F9; --paper:#FFFFFF; --paper-2:#E8EEF6; --ink:#15223A; --ink-2:#33415C; --muted:#586982; --rule:#CAD4E2;
-  --accent:#E5B012; --accent-ink:#2E2300; --hot:#15223A; --yes:#188F6F; --no:#C9414F; --blue:#2D68D2;
-  --c-blue:#CFE0FB; --c-green:#CDEBDD; --c-yellow:#FBE7A6; --c-pink:#F8D3D8; --c-gray:#E3E8F0;
-  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
-  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
-  --serif:var(--body); --sans:var(--body);
-  color-scheme:light;
+/* before / after */
+.ba { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ba > div { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); display: grid; gap: 6px; }
+.ba h3 { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ba ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px; }
+
+/* doors */
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.door { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--surface); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.door h3 { margin: 0; font-family: var(--font-display); font-size: 19px; }
+.door p { margin: 0; font-size: 15px; color: var(--muted); }
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+
+/* status */
+.status { border: 2px solid var(--ink); border-radius: 18px; padding: 22px; display: grid; gap: 14px; background: var(--surface); }
+.status h2 { font-size: 26px; }
+.status ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.status li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+a { color: inherit; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* svg paint */
+.s-ink { stroke: var(--ink); }
+.s-muted { stroke: var(--muted); }
+.s-line { stroke: var(--line); }
+.s-accent { stroke: var(--accent); }
+.f-surface { fill: var(--surface); }
+.f-bg { fill: var(--bg); }
+.f-ink { fill: var(--ink); }
+.f-muted { fill: var(--muted); }
+.f-accent { fill: var(--accent); }
+.f-yes { fill: var(--yes); }
+.f-no { fill: var(--no); }
+.f-line { fill: var(--line); }
+.svg-t { font-family: var(--font-mono); font-size: 12px; fill: var(--ink); }
+.svg-tm { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.svg-tb { font-family: var(--font-display); font-weight: 700; font-size: 15px; fill: var(--ink); }
+.svg-ta { font-family: var(--font-display); font-weight: 700; font-size: 14px; fill: var(--accent-ink); }
+
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .ba, .doors { grid-template-columns: minmax(0, 1fr); }
+  .status li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
-  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
-  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --bg:#0D141F; --paper:#152031; --paper-2:#1C2A40; --ink:#E6ECF5; --ink-2:#C3CEDF; --muted:#98A8BF; --rule:#2A3A52;
-  --accent:#F1C63B; --accent-ink:#261D00; --hot:#E6ECF5; --yes:#39C59C; --no:#EE6E7C; --blue:#73A0F2;
-  --c-blue:#20365A; --c-green:#173D33; --c-yellow:#4A3C10; --c-pink:#4A2229; --c-gray:#263449;
-  color-scheme:dark;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0}
-html,body{overflow-x:clip}
-body{background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--body);-webkit-font-smoothing:antialiased}
-main{max-width:1060px;margin:0 auto;padding-inline:20px;padding-block:40px 72px;display:grid;gap:56px}
-.wrap{display:block;max-width:none;margin:0;padding:0;grid-template-columns:none}
-.wrap>*{grid-column:auto;min-width:0}
-h1,h2,h3{font-family:var(--display);text-wrap:balance;overflow-wrap:break-word;letter-spacing:-.01em}
-h1{font-size:clamp(38px,6vw,64px);font-weight:800;line-height:1.02;max-width:20ch}
-h2{font-size:clamp(24px,3.2vw,32px);font-weight:700;line-height:1.12;max-width:none}
-p{max-width:62ch;text-wrap:pretty}
-strong{font-weight:700}
-a{color:var(--blue);text-decoration-color:currentColor}
-a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-code{font:400 .82em/1.3 var(--mono);background:color-mix(in srgb,var(--blue) 10%,transparent);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
-pre{font:400 13px/1.5 var(--mono);background:color-mix(in srgb,var(--blue) 8%,var(--paper));border:1px solid var(--rule);border-radius:8px;padding:10px 12px;overflow-x:auto;max-width:100%;margin:0}
-pre code{background:none;padding:0;font-size:inherit}
-
-.hero{display:grid;gap:14px;padding:0}
-.lede{font-size:20px;line-height:1.5;color:var(--muted);max-width:60ch;margin:0}
-.lede b,.lede strong{color:var(--ink)}
-
-/* The glance: the route as pills, a character in each; the deciding stop is stamped. */
-.cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
-.cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
-.cast li+li::before{content:"→";position:absolute;left:-25px;top:50%;transform:translateY(-50%);width:auto;height:auto;background:none;-webkit-mask:none;mask:none;color:var(--muted);font:400 16px/1 var(--mono)}
-.cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
-.cast b{font-weight:700}
-.cast code{background:none;padding:0;color:var(--muted);font-size:12px}
-.cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
-.cast li.hl::after{content:none}
-@media (max-width:40rem){
-  .cast{flex-direction:column;align-items:flex-start;gap:26px}
-  .cast li{display:inline-flex;grid-template-columns:none;width:auto}
-  .cast li .ico{grid-row:auto;width:30px;height:30px}
-  .cast li>:not(.ico){grid-column:auto}
-  .cast li+li::before{content:"↓";left:20px;top:-22px;transform:none;width:auto;height:auto}
-}
-.caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
-.glance-words{margin:0}
-
-/* Zooms: picture card left; stamp, claim and words right; dashed seams between. */
-.zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
-.zoom{counter-increment:zoom;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"pic head" "pic words";column-gap:40px;row-gap:14px;align-content:center;padding:0}
-.zoom::before{content:none}
-.zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
-.zoom-body{display:contents}
-.zoom h2{grid-area:head;align-self:end;position:relative;display:block;padding:8px 0 8px 66px;min-height:52px}
-.zoom h2::before{content:counter(zoom);position:absolute;left:0;top:50%;right:auto;transform:translateY(-50%);width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent)}
-.zoom .drawing{grid-area:pic;align-self:center}
-.zoom .words{grid-area:words;align-self:start}
-@media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
-.drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
-.drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
-.drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
-.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:none}
-.words{display:grid;gap:12px;min-width:0}
-.hood{font:400 15px/1.55 var(--body);color:var(--ink-2);border-left:3px solid var(--rule);padding-left:12px}
-.hood strong{color:var(--ink)}
-.hood ol{padding-left:1.2em;display:grid;gap:4px}
-.hood>*+*{margin-top:6px}
-.tags{display:flex;flex-wrap:wrap;gap:6px}
-.tag{font:400 12.5px/1.4 var(--mono);color:var(--muted);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;overflow-wrap:anywhere}
-.big{font:700 21px/1.3 var(--display);border-left:4px solid var(--accent);padding-left:14px;max-width:40ch}
-.pill{display:inline-block;font:600 12px/1.6 var(--mono);color:var(--ink);border-radius:999px;padding:0 9px;white-space:nowrap}
-.pill.yes{background:color-mix(in srgb,var(--yes) 16%,transparent);color:var(--yes)}
-.pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
-.pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
-
-/* Scene paint: flat fills and thick ink, from the tokens. */
-.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-line{stroke:var(--rule)}
-.f-surface{fill:var(--paper)} .f-bg{fill:var(--bg)} .f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-line{fill:var(--rule)}
-.f-accent{fill:var(--accent)} .f-yes{fill:var(--yes)} .f-no{fill:var(--no)} .f-blue{fill:var(--blue)}
-.svg-t{font:400 12px var(--mono);fill:var(--ink)}
-.svg-tm{font:400 11px var(--mono);fill:var(--muted)}
-.svg-tb{font:700 15px var(--display);fill:var(--ink)}
-.svg-ta{font:700 14px var(--display);fill:var(--accent-ink)}
-/* SVG paint comes from tokens, so dark mode follows. */
-.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.dot{fill:var(--ink)}
-.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
-.wire{stroke:var(--muted);stroke-width:2;fill:none;stroke-linecap:round}
-.hot{stroke:var(--hot);stroke-width:3;fill:none;stroke-linecap:round}
-.cut{stroke-dasharray:6 6}
-.life{stroke:var(--rule);stroke-width:1.5;stroke-dasharray:3 6;stroke-linecap:round}
-.pen{fill:var(--accent);fill-opacity:.38;stroke:none}
-.n{font:700 15px var(--display);fill:var(--ink);text-anchor:middle}
-.t{font:400 12.5px var(--mono);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l{font:400 13.5px var(--body);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l.h{fill:var(--ink);font-weight:700}
-.start{text-anchor:start}
-.end{text-anchor:end}
-.num-bg{fill:var(--ink)}
-.num{font:700 11px var(--mono);fill:var(--paper);text-anchor:middle}
-.tip{fill:var(--muted)}
-.tip-hot{fill:var(--hot)}
-
-/* The catch: the one boxed note on the page. */
-.catch{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:18px;padding:22px}
-.catch .wrap{display:grid;gap:10px}
-.catch h2{font-size:26px;line-height:1.15;max-width:none}
-.catch p{margin:0;max-width:62ch}
-.catch code{background:color-mix(in srgb,var(--blue) 10%,transparent)}
-
-.further{padding:0;display:grid;gap:0}
-.further h2{margin-bottom:12px}
-.further details{border-top:1px solid var(--rule);padding-block:12px;max-width:none}
-.further details:last-child{border-bottom:1px solid var(--rule)}
-.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:700 16px/1.45 var(--body)}
-.further summary::-webkit-details-marker{display:none}
-.further summary::before{content:"+";font-family:var(--mono);color:var(--muted)}
-.further details[open] summary::before{content:"−"}
-.further details p{font:400 15px/1.55 var(--body);color:var(--ink-2);margin:6px 0 0 1.5rem}
-
-/* Decision pages: two cards and a table. */
-.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.compare>*{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;background:var(--paper);display:grid;gap:6px}
-.compare>.pick{border:2px dashed var(--accent)}
-.compare h3{margin:0;font:600 12px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.compare p{font-size:15px;color:var(--ink-2)}
-@media (max-width:760px){.compare{grid-template-columns:minmax(0,1fr)}}
-.table{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font:400 15px/1.45 var(--body);font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
-th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-
-.colophon{padding:0;font:400 14px/1.6 var(--body);color:var(--muted)}
-.colophon p+p{margin-top:6px}
-.colophon strong{color:var(--ink)}
-@media (max-width:760px){body{font-size:16px}}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 </head>
 <body>
+<main class="page">
 
-<!-- The cast. Actors have faces; objects do not. Recolor one use with style="--fill:var(--c-pink)". If the cast lacks something, draw it the same way: 64×64, class "o" outline, one crayon fill, a face only for an actor. -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <filter id="rough" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1400" height="1400"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--hot)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  </defs>
-  <symbol id="ico-browser" viewBox="0 0 64 64"><rect class="o" x="6" y="10" width="52" height="44" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M6 21h52"/><circle class="dot" cx="13" cy="15.5" r="1.8"/><circle class="dot" cx="19" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="15.5" r="1.8"/><circle class="dot" cx="25" cy="34" r="2.6"/><circle class="dot" cx="39" cy="34" r="2.6"/><path class="o" d="M26 42q6 5 12 0"/></symbol>
-  <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
-  <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
-  <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
-  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--accent)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
-  <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
-  <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
-  <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
-  <symbol id="ico-lock" viewBox="0 0 64 64"><path class="o" d="M21 29v-8a11 11 0 0 1 22 0v8"/><rect class="o" x="13" y="29" width="38" height="28" rx="5" style="fill:var(--fill,var(--c-yellow))"/><circle class="dot" cx="32" cy="40" r="3"/><path class="o" d="M32 42v6"/></symbol>
-  <symbol id="ico-list" viewBox="0 0 64 64"><rect class="o" x="12" y="10" width="40" height="49" rx="5" style="fill:var(--fill,var(--paper))"/><rect class="o" x="23" y="5" width="18" height="9" rx="3" style="fill:var(--c-gray)"/><path class="o" d="M19 27l3 3 5-6M32 27h13M19 39l3 3 5-6M32 39h13M21 50h4M32 50h13"/></symbol>
-  <symbol id="ico-clock" viewBox="0 0 64 64"><circle class="o" cx="32" cy="33" r="23" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 19v14l9 6M26 6h12"/></symbol>
-  <symbol id="ico-cloud" viewBox="0 0 64 64"><path class="o" d="M19 49h29a11 11 0 0 0 1-22 15 15 0 0 0-29-3 12.5 12.5 0 0 0-1 25z" style="fill:var(--fill,var(--c-blue))"/></symbol>
-  <symbol id="ico-gear" viewBox="0 0 64 64"><circle cx="32" cy="32" r="21" fill="none" stroke="var(--ink)" stroke-width="8" stroke-dasharray="5.5 5.5"/><circle class="o" cx="32" cy="32" r="17" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="32" cy="32" r="5.5" style="fill:var(--paper)"/></symbol>
-  <symbol id="ico-box" viewBox="0 0 64 64"><path class="o" d="M10 22l22-11 22 11v24L32 57 10 46z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M10 22l22 11 22-11M32 33v24"/></symbol>
-  <symbol id="ico-shield" viewBox="0 0 64 64"><path class="o" d="M32 5l21 7v16c0 14-9 24-21 31C20 52 11 42 11 28V12z" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M23 32l6 6 12-13"/></symbol>
-  <symbol id="ico-bolt" viewBox="0 0 64 64"><path class="o" d="M37 4L14 36h15l-4 24 25-34H35z" style="fill:var(--fill,var(--c-yellow))"/></symbol>
-  <symbol id="ico-stop" viewBox="0 0 64 64"><path class="o" d="M22 6h20l14 14v20L42 54H22L8 40V20z" style="fill:var(--fill,var(--c-pink))"/><path class="o" d="M24 22l16 16M40 22L24 38"/></symbol>
-  <symbol id="ico-check" viewBox="0 0 64 64"><circle class="o" cx="32" cy="32" r="24" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 33l8 8 15-17"/></symbol>
-  <!-- Scene props: the metaphor's objects. -->
-  <symbol id="ico-cabinet" viewBox="0 0 64 64"><rect class="o" x="12" y="5" width="40" height="54" rx="4" style="fill:var(--fill,var(--c-gray))"/><rect class="o" x="17" y="10" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="26" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="42" width="30" height="13" rx="2" style="fill:var(--paper)"/><path class="o" d="M28 16.5h8M28 32.5h8M28 48.5h8"/></symbol>
-  <symbol id="ico-book" viewBox="0 0 64 64"><path class="o" d="M32 15c-6-4-14-5-24-4v40c10-1 18 0 24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 15c6-4 14-5 24-4v40c-10-1-18 0-24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M14 23c5-.5 9 0 13 1.5M14 31c5-.5 9 0 13 1.5M14 39c5-.5 9 0 13 1.5M37 24.5c4-1.5 8-2 13-1.5M37 32.5c4-1.5 8-2 13-1.5"/></symbol>
-  <symbol id="ico-bell" viewBox="0 0 64 64"><path class="o" d="M18 44c3-4 4-8 4-15a10 10 0 0 1 20 0c0 7 1 11 4 15z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M14 44h36M28 50a4 4 0 0 0 8 0M32 9v4M8 22l5 3M56 22l-5 3"/></symbol>
-  <symbol id="ico-bin" viewBox="0 0 64 64"><path class="o" d="M16 20h32l-3 36H19z" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M11 20h42M26 20v-6h12v6M26 28v20M32 28v20M38 28v20"/></symbol>
-  <symbol id="ico-door" viewBox="0 0 64 64"><path class="o" d="M16 58V12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v46z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M10 58h44"/><circle class="dot" cx="41" cy="35" r="2.6"/></symbol>
-  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--accent)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
-  <symbol id="ico-search" viewBox="0 0 64 64"><circle class="o" cx="27" cy="27" r="16" style="fill:var(--fill,var(--paper))"/><path class="o" d="M39 39l15 15" style="stroke-width:5"/><path class="o" d="M19 23a9 9 0 0 1 7-6"/></symbol>
-  <symbol id="ico-switch-on" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-green))"/><circle class="o" cx="45" cy="32" r="9" style="fill:var(--paper)"/></symbol>
-  <symbol id="ico-switch-off" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="19" cy="32" r="9" style="fill:var(--paper)"/></symbol>
-</svg>
-
-<main>
-  <header class="wrap hero">
-    <h1>One resolver asks three servers in turn, then keeps the answer.</h1>
-    <p class="lede">You type <code>github.com</code> and press Enter. Your resolver asks a root server, a <code>.com</code> server and GitHub's own name server, then hands back <code>20.217.135.5</code> and keeps a copy for 60 seconds.</p>
-    <ol class="cast" aria-label="The whole flow at a glance">
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-browser"/></svg><b>Your laptop</b><code>stub resolver</code></li>
-      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-person"/></svg><b>The librarian</b><code>recursive resolver</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-book"/></svg><b>The main index</b><code>root server</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-book" style="--fill:var(--c-yellow)"/></svg><b>The .com index</b><code>TLD server</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-cabinet"/></svg><b>GitHub's cabinet</b><code>authoritative NS</code></li>
-    </ol>
-    <p class="caption">Marked: the librarian, because it does the whole walk and keeps copies, so a repeat question never leaves its desk. The drawings below zoom into each part.</p>
-    <p class="glance-words"><strong>In plain words.</strong> No one server knows every name. The librarian reads <code>github.com</code> right to left and asks one index per part. GitHub's own cabinet holds the address. The librarian keeps a copy for next time.</p>
+  <header class="hero">
+    <div class="eyebrow">DNS · explained simply</div>
+    <h1>How DNS finds an address</h1>
+    <p>You type <b>github.com</b> and press Enter. Your laptop asks one <b>resolver</b>, which asks three servers in turn, hands back <code>20.217.135.5</code> and keeps a <b>copy</b> for 60 seconds.</p>
+    <div class="route" aria-label="The route in short">
+      <span class="stop">browser cache</span><span class="arrow">→</span>
+      <span class="stop">resolver :53</span><span class="arrow">→</span>
+      <span class="stop">root .</span><span class="arrow">→</span>
+      <span class="stop">com. TLD</span><span class="arrow">→</span>
+      <span class="stop">authoritative</span><span class="arrow">→</span>
+      <span class="stop">TTL 60</span>
+    </div>
   </header>
 
-  <ol class="zooms">
-    <li class="wrap zoom">
-      <h2>Your laptop asks one question and waits.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 400 250" role="img" aria-label="The laptop first checks its own hosts file and cache, then sends one query for github.com with the Recursion Desired bit set to the librarian, and the librarian sends back the address 20.217.135.5 with a TTL of 60 seconds.">
-            <use href="#ico-browser" x="54" y="4" width="52" height="52"/>
-            <use href="#ico-person" x="294" y="4" width="52" height="52"/>
-            <text class="n" x="80" y="74">Laptop</text><text class="t" x="80" y="90">stub resolver</text>
-            <text class="n" x="320" y="74">Librarian</text><text class="t" x="320" y="90">resolver</text>
-            <line class="life" x1="80" y1="100" x2="80" y2="242"/><line class="life" x1="320" y1="100" x2="320" y2="242"/>
-            <circle class="num-bg" cx="20" cy="130" r="9"/><text class="num" x="20" y="134">1</text>
-            <path class="wire" d="M82 118h56v24H86" marker-end="url(#arrow)"/><text class="t start" x="150" y="134">/etc/hosts, cache</text>
-            <circle class="num-bg" cx="20" cy="178" r="9"/><text class="num" x="20" y="182">2</text>
-            <line class="hot" x1="82" y1="178" x2="316" y2="178" marker-end="url(#arrow-hl)"/><text class="l h" x="200" y="170">github.com? A, RD=1</text>
-            <ellipse class="pen" cx="200" cy="172" rx="112" ry="21" transform="rotate(-3 200 172)"/>
-            <circle class="num-bg" cx="20" cy="222" r="9"/><text class="num" x="20" y="226">3</text>
-            <line class="wire" x1="318" y1="222" x2="84" y2="222" marker-end="url(#arrow)"/><text class="l" x="200" y="214">20.217.135.5 · TTL 60</text>
-          </svg>
-          <figcaption>Highlighted: step 2, because the Recursion Desired flag hands the whole walk to the librarian.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> Your laptop does not walk the tree. It checks its own cache first. Then it asks one librarian and waits for a finished answer.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> The OS stub resolver checks <code>/etc/hosts</code> and its cache, then sends one UDP packet to port 53 with the <code>RD</code> (Recursion Desired) bit set. The resolver's address comes from your network or a setting such as <code>1.1.1.1</code>; this laptop uses <code>100.100.100.100</code>.</p></div>
-          <div class="tags"><span class="tag">librarian = recursive resolver</span></div>
-        </div>
+  <!-- 1 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="A laptop's browser looks for github.com on its own sticky note, then the operating system looks in its own notebook and hosts file">
+        <rect x="20" y="40" width="150" height="102" rx="10" class="f-surface s-ink" stroke-width="3"/>
+        <rect x="30" y="50" width="130" height="82" rx="4" class="f-bg"/>
+        <rect x="38" y="58" width="96" height="22" rx="11" class="f-surface s-ink" stroke-width="2"/>
+        <text x="86" y="73" text-anchor="middle" class="svg-t">github.com</text>
+        <rect x="40" y="92" width="64" height="7" rx="3.5" class="f-line"/>
+        <rect x="40" y="106" width="48" height="7" rx="3.5" class="f-line"/>
+        <path d="M16 142 H174 L180 156 H10 Z" class="f-line s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+        <rect x="124" y="86" width="62" height="48" rx="3" class="f-accent"/>
+        <text x="155" y="115" text-anchor="middle" class="svg-ta">cache?</text>
+        <text x="95" y="180" text-anchor="middle" class="svg-tm">browser cache</text>
+        <path d="M188 104 C206 100, 216 96, 230 92" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="236" y="44" width="88" height="112" rx="8" class="f-surface s-line" stroke-width="2"/>
+        <circle cx="236" cy="64" r="5" class="f-surface s-line" stroke-width="2"/>
+        <circle cx="236" cy="88" r="5" class="f-surface s-line" stroke-width="2"/>
+        <circle cx="236" cy="112" r="5" class="f-surface s-line" stroke-width="2"/>
+        <circle cx="236" cy="136" r="5" class="f-surface s-line" stroke-width="2"/>
+        <rect x="250" y="60" width="60" height="7" rx="3.5" class="f-line"/>
+        <rect x="250" y="76" width="44" height="7" rx="3.5" class="f-line"/>
+        <rect x="250" y="92" width="54" height="7" rx="3.5" class="f-line"/>
+        <rect x="250" y="108" width="38" height="7" rx="3.5" class="f-line"/>
+        <text x="280" y="180" text-anchor="middle" class="svg-t">/etc/hosts</text>
+        <text x="280" y="196" text-anchor="middle" class="svg-tm">OS cache</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">1</div><h2>Your laptop checks its own notes first</h2></div>
+      <p>Before anything goes out, your laptop looks for a copy it already has. The browser checks its notes. Then it asks the operating system, which checks its notes too.</p>
+      <p>The browser keeps a small <b>DNS cache</b>. On a miss, it hands the name to the OS <b>stub resolver</b>. The stub reads the <code>/etc/hosts</code> file and its own cache. A hit here needs no network at all.</p>
+      <div class="tags">
+        <span class="tag">your notes = browser + OS cache</span>
+        <span class="tag">pinned note = /etc/hosts</span>
       </div>
-    </li>
-
-    <li class="wrap zoom">
-      <h2>The librarian walks the name from right to left.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 400 410" role="img" aria-label="The librarian asks the root server for github.com and gets a pointer to the .com servers, asks a .com server and gets a pointer to GitHub's servers, then asks GitHub's authoritative name server and gets the A record 20.217.135.5.">
-            <use href="#ico-person" x="34" y="8" width="52" height="52"/>
-            <text class="n" x="60" y="78">Librarian</text><text class="t" x="60" y="94">resolver</text>
-            <line class="life" x1="60" y1="104" x2="60" y2="400"/>
-            <use href="#ico-book" x="306" y="108" width="48" height="48"/>
-            <text class="n" x="330" y="174">Main index</text><text class="t" x="330" y="190">root server</text>
-            <circle class="num-bg" cx="20" cy="120" r="9"/><text class="num" x="20" y="124">1</text>
-            <line class="wire" x1="62" y1="120" x2="300" y2="120" marker-end="url(#arrow)"/><text class="l" x="180" y="112">github.com?</text>
-            <circle class="num-bg" cx="20" cy="148" r="9"/><text class="num" x="20" y="152">2</text>
-            <line class="wire" x1="302" y1="148" x2="64" y2="148" marker-end="url(#arrow)"/><text class="l" x="180" y="166">ask the .com servers</text>
-            <use href="#ico-book" x="306" y="214" width="48" height="48" style="--fill:var(--c-yellow)"/>
-            <text class="n" x="330" y="280">.com index</text><text class="t" x="330" y="296">TLD server</text>
-            <circle class="num-bg" cx="20" cy="226" r="9"/><text class="num" x="20" y="230">3</text>
-            <line class="wire" x1="62" y1="226" x2="300" y2="226" marker-end="url(#arrow)"/><text class="l" x="180" y="218">github.com?</text>
-            <circle class="num-bg" cx="20" cy="254" r="9"/><text class="num" x="20" y="258">4</text>
-            <line class="wire" x1="302" y1="254" x2="64" y2="254" marker-end="url(#arrow)"/><text class="l" x="180" y="272">ask GitHub's servers</text>
-            <use href="#ico-cabinet" x="306" y="320" width="48" height="48"/>
-            <text class="n" x="330" y="386">Card cabinet</text><text class="t" x="330" y="402">authoritative NS</text>
-            <circle class="num-bg" cx="20" cy="332" r="9"/><text class="num" x="20" y="336">5</text>
-            <line class="wire" x1="62" y1="332" x2="300" y2="332" marker-end="url(#arrow)"/><text class="l" x="180" y="324">github.com?</text>
-            <circle class="num-bg" cx="20" cy="360" r="9"/><text class="num" x="20" y="364">6</text>
-            <line class="hot" x1="302" y1="360" x2="64" y2="360" marker-end="url(#arrow-hl)"/><text class="l h" x="180" y="380">A 20.217.135.5</text>
-            <ellipse class="pen" cx="180" cy="368" rx="100" ry="23" transform="rotate(-3 180 368)"/>
-          </svg>
-          <figcaption>Highlighted: step 6, because only GitHub's cabinet gives an answer; steps 2 and 4 are pointers.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> Each index knows only the next index down. The librarian follows the pointers until one server hands back a real address.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> Steps 2 and 4 are referrals: <code>NS</code> records for the next zone, plus glue addresses so the resolver can reach those servers. Step 6 is the authoritative <code>A</code> record. From this laptop, <code>dig +trace</code> measured the three hops at 81, 85 and 162 ms.</p></div>
-<pre><code>$ dig +trace @1.1.1.1 github.com   (trimmed)
-com.        172800 IN NS l.gtld-servers.net.
-;; from c.root-servers.net in 81 ms
-github.com. 172800 IN NS ns-1707.awsdns-21.co.uk.
-;; from f.gtld-servers.net in 85 ms
-github.com. 60     IN A  20.217.135.5
-;; from ns-1707.awsdns-21.co.uk in 162 ms</code></pre>
-          <div class="tags"><span class="tag">librarian = recursive resolver</span><span class="tag">main index = root server</span><span class="tag">.com index = TLD server (com.)</span><span class="tag">card cabinet = authoritative NS</span><span class="tag">pointer = referral (NS + glue)</span></div>
-          <p class="big">Every server but the last one only says: ask someone else.</p>
-        </div>
-      </div>
-    </li>
-
-    <li class="wrap zoom">
-      <h2>The real answer is a card with an expiry time.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 400 268" role="img" aria-label="GitHub's card cabinet has drawers labeled A, AAAA and MX. The A drawer is pulled out, and its card says github.com A 20.217.135.5 with a TTL of 60. A clock below the card shows the 60-second expiry.">
-            <use href="#ico-cabinet" x="40" y="30" width="150" height="150"/>
-            <text class="t end" x="60" y="73">A</text><text class="t end" x="60" y="110">AAAA</text><text class="t end" x="60" y="148">MX</text>
-            <text class="n" x="115" y="206">Card cabinet</text><text class="t" x="115" y="222">authoritative NS</text>
-            <path class="wire cut" d="M164 69c10 0 18 4 26 10" marker-end="url(#arrow)"/>
-            <rect class="box" x="196" y="40" width="184" height="86" rx="4" transform="rotate(-2 288 83)"/>
-            <text class="t" x="288" y="66">github.com. IN A</text>
-            <text class="n" x="288" y="92">20.217.135.5</text>
-            <text class="t" x="288" y="114">TTL 60</text>
-            <use href="#ico-clock" x="256" y="146" width="64" height="64"/>
-            <text class="n" x="288" y="228">Expiry</text><text class="t" x="288" y="244">TTL 60 s</text>
-            <ellipse class="pen" cx="288" cy="196" rx="62" ry="56" transform="rotate(-5 288 196)"/>
-          </svg>
-          <figcaption>Highlighted: the expiry on the card, because it sets how long every copy of this answer may live.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> GitHub's cabinet has one drawer per kind of record. The <code>A</code> drawer holds the address. Every card carries an expiry time, and this one says 60 seconds.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> The authoritative server answers from its zone with the <code>AA</code> (Authoritative Answer) bit set. Each resource record carries a <code>TTL</code> in seconds, and a cache may shorten it but never stretch it. <code>AAAA</code> holds an IPv6 address; <code>MX</code> names a mail server.</p></div>
-          <div class="tags"><span class="tag">card cabinet = authoritative NS</span><span class="tag">drawer = record type</span><span class="tag">card = resource record</span><span class="tag">expiry = TTL</span></div>
-        </div>
-      </div>
-    </li>
-
-    <li class="wrap zoom">
-      <h2>The librarian keeps copies, so the walk is rare.</h2>
-      <div class="zoom-body">
-        <figure class="drawing">
-          <svg viewBox="0 0 400 300" role="img" aria-label="The laptop asks the librarian for github.com again, and the librarian answers from its copy. Its clipboard holds two copied cards: the com pointer for 2 days and the github.com A record for 60 seconds. When the A card's 60 seconds run out, it goes in the bin.">
-            <use href="#ico-browser" x="20" y="16" width="56" height="56"/>
-            <use href="#ico-person" x="186" y="16" width="56" height="56"/>
-            <text class="n" x="48" y="94">Laptop</text>
-            <text class="n" x="214" y="94">Librarian</text>
-            <line class="wire" x1="80" y1="34" x2="180" y2="34" marker-end="url(#arrow)"/><text class="l" x="131" y="26">github.com?</text>
-            <line class="hot" x1="182" y1="58" x2="84" y2="58" marker-end="url(#arrow-hl)"/><text class="l h" x="131" y="78">from the copy</text>
-            <ellipse class="pen" cx="131" cy="66" rx="58" ry="22" transform="rotate(-4 131 66)"/>
-            <line class="wire" x1="214" y1="104" x2="214" y2="128" marker-end="url(#arrow)"/>
-            <use href="#ico-list" x="40" y="130" width="80" height="80"/>
-            <text class="n" x="80" y="230">Clipboard</text><text class="t" x="80" y="246">cache</text>
-            <rect class="box" x="136" y="134" width="172" height="34" rx="4"/><text class="t start" x="148" y="156">com. NS · 2 days</text>
-            <rect class="box" x="136" y="186" width="172" height="34" rx="4"/><text class="t start" x="148" y="208">github.com A · 60 s</text>
-            <path class="wire cut" d="M250 222c10 40 80 40 102 14" marker-end="url(#arrow)"/><text class="t" x="290" y="284">after 60 s</text>
-            <use href="#ico-bin" x="330" y="176" width="56" height="56"/>
-            <text class="n" x="358" y="250">Bin</text><text class="t" x="358" y="266">TTL 0</text>
-          </svg>
-          <figcaption>Highlighted: the answer from the copy, because it costs one round trip instead of four.</figcaption>
-        </figure>
-        <div class="words">
-          <p><strong>In plain words.</strong> The librarian copies every card and every pointer it gets. The next asker gets the copy at once. When a card expires, it goes in the bin, and the next question walks again.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> A resolver caches each record for its <code>TTL</code> and counts it down; two <code>dig</code> calls in a row show 55, then 54. The <code>com.</code> referral lives for 172800 s (2 days), so a later walk for any <code>.com</code> name skips the root.</p></div>
-<pre><code>$ dig @1.1.1.1 github.com +noall +answer
-github.com.   55   IN   A   20.217.135.5
-$ dig @1.1.1.1 github.com +noall +answer
-github.com.   54   IN   A   20.217.135.5</code></pre>
-          <div class="tags"><span class="tag">librarian = recursive resolver</span><span class="tag">clipboard = cache</span><span class="tag">card = resource record</span><span class="tag">pointer = referral (NS)</span><span class="tag">bin = evicted at TTL 0</span></div>
-          <p class="big">A cached answer costs one round trip. A cold one costs four.</p>
-        </div>
-      </div>
-    </li>
-  </ol>
-
-  <section class="catch">
-    <div class="wrap">
-      <h2>A changed record does not spread. Old copies expire.</h2>
-      <p>Nothing pushes your edit to the resolvers. Each one serves its old copy until the <code>TTL</code> runs out, so lower the TTL well before a move and wait out the old one.</p>
     </div>
   </section>
 
-  <section class="wrap further">
-    <h2>Push further</h2>
-    <details><summary>What if GitHub's name server is down?</summary><p><code>github.com</code> lists eight name servers, so the resolver tries another one. If none answer, your laptop gets <code>SERVFAIL</code>.</p></details>
-    <details><summary>Why does a brand-new subdomain fail for a while?</summary><p>If anyone asked for it before it existed, resolvers cached the <code>NXDOMAIN</code>. That "no" lives for the negative TTL in the zone's <code>SOA</code> record (RFC 2308).</p></details>
-    <details><summary>Can someone fake the answer?</summary><p>Classic DNS is plain, unsigned UDP, so a forged reply can slip in. DNSSEC signs records so resolvers can check them, and DNS over HTTPS or TLS encrypts the hop from your laptop.</p></details>
+  <!-- 2 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="The laptop hands one question slip for github.com, flagged RD=1, to a librarian at the resolver's desk on UDP port 53, then waits for the answer">
+        <rect x="20" y="86" width="80" height="56" rx="6" class="f-surface s-line" stroke-width="2"/>
+        <rect x="28" y="94" width="64" height="40" rx="3" class="f-bg"/>
+        <path d="M14 142 H106 L112 152 H8 Z" class="f-line s-line" stroke-width="2" stroke-linejoin="round"/>
+        <text x="60" y="176" text-anchor="middle" class="svg-tm">stub resolver</text>
+        <path d="M104 110 C112 108, 116 106, 122 104" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <line x1="140" y1="84" x2="140" y2="48" class="s-ink" stroke-width="2.5"/>
+        <rect x="140" y="38" width="52" height="24" rx="3" class="f-accent"/>
+        <text x="166" y="55" text-anchor="middle" class="svg-ta">RD=1</text>
+        <rect x="124" y="84" width="92" height="44" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+        <text x="170" y="103" text-anchor="middle" class="svg-t">github.com</text>
+        <text x="170" y="119" text-anchor="middle" class="svg-tm">A ?</text>
+        <path d="M218 106 C226 106, 230 104, 236 102" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <circle cx="282" cy="66" r="16" class="f-surface s-ink" stroke-width="2.5"/>
+        <rect x="256" y="86" width="52" height="46" rx="20" class="f-surface s-ink" stroke-width="2.5"/>
+        <rect x="238" y="124" width="88" height="44" rx="6" class="f-surface s-ink" stroke-width="3"/>
+        <text x="282" y="151" text-anchor="middle" class="svg-t">1.1.1.1</text>
+        <text x="282" y="190" text-anchor="middle" class="svg-tm">resolver</text>
+        <text x="282" y="206" text-anchor="middle" class="svg-t">UDP :53</text>
+        <path d="M236 160 C200 192, 144 192, 110 158" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">2</div><h2>It asks one librarian and waits</h2></div>
+      <p>Your laptop does not search the internet itself. It hands one question to a <b>librarian</b> and waits for a finished answer.</p>
+      <p>The stub sends one UDP packet to port <code>53</code> on a <b>recursive resolver</b>. Your network tells the laptop which one to use, or you set one, such as <code>1.1.1.1</code>. The query asks for the <code>A</code> record of <code>github.com</code>. It sets the <code>RD</code> (Recursion Desired) bit: please do the whole search for me.</p>
+      <div class="tags">
+        <span class="tag">librarian = recursive resolver</span>
+        <span class="tag">"find it for me" = RD bit</span>
+      </div>
+    </div>
   </section>
 
-  <footer class="wrap colophon">
-    <p><strong>Simplified on purpose.</strong> Each server drawn is really a set (13 root letters on 2,049 instances, 13 <code>.com</code> servers, 8 for GitHub), and CNAME chains, IPv6 and DNSSEC checks are left out.</p>
-    <p>Sources: <a href="https://www.rfc-editor.org/rfc/rfc1034">RFC 1034</a>, <a href="https://www.rfc-editor.org/rfc/rfc9499">RFC 9499</a> (terminology) and <a href="https://root-servers.org/">root-servers.org</a>. Times, TTLs and addresses measured with <code>dig</code> from this laptop on 1 Nov 2026. Not verified: the order of local checks before the query, which varies by OS.</p>
-  </footer>
+  <!-- 3 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="Two library signs: the root sign points to the com. wing, and the com. sign points to GitHub's own card cabinet">
+        <path d="M66 54 C92 26, 142 26, 168 54" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <path d="M176 54 C206 26, 254 28, 282 58" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="58" y="62" width="6" height="112" class="f-ink"/>
+        <rect x="40" y="172" width="42" height="8" rx="3" class="f-line"/>
+        <path d="M20 66 H100 L114 82 L100 98 H20 Z" class="f-surface s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+        <text x="64" y="87" text-anchor="middle" class="svg-t">com.</text>
+        <text x="61" y="200" text-anchor="middle" class="svg-t">. (root)</text>
+        <rect x="167" y="62" width="6" height="112" class="f-ink"/>
+        <rect x="149" y="172" width="42" height="8" rx="3" class="f-line"/>
+        <path d="M124 66 H212 L226 82 L212 98 H124 Z" class="f-accent" stroke-linejoin="round"/>
+        <text x="171" y="87" text-anchor="middle" class="svg-ta">github</text>
+        <text x="170" y="200" text-anchor="middle" class="svg-t">com. (TLD)</text>
+        <rect x="248" y="66" width="72" height="108" rx="8" class="f-surface s-line" stroke-width="2"/>
+        <rect x="258" y="78" width="52" height="24" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <rect x="258" y="110" width="52" height="24" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <rect x="258" y="142" width="52" height="24" rx="4" class="f-bg s-line" stroke-width="2"/>
+        <rect x="276" y="88" width="16" height="5" rx="2.5" class="f-line"/>
+        <rect x="276" y="120" width="16" height="5" rx="2.5" class="f-line"/>
+        <rect x="276" y="152" width="16" height="5" rx="2.5" class="f-line"/>
+        <text x="284" y="200" text-anchor="middle" class="svg-t">nsone.net</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">3</div><h2>Each sign points one level down</h2></div>
+      <p>The librarian reads the name from right to left. It starts at the <b>root</b>, the main sign by the door. The root does not know GitHub. It only points to the <code>com.</code> wing. The <code>com.</code> sign only points to GitHub's own cabinet.</p>
+      <p>These answers are <b>referrals</b>: <code>NS</code> records that name the next zone's servers, often with their addresses. Resolver software ships with the root servers' addresses built in.</p>
+<pre>$ dig +trace @1.1.1.1 github.com   # trimmed
+com.        172800 IN NS l.gtld-servers.net.
+;; from c.root-servers.net in 65 ms
+github.com. 172800 IN NS dns4.p08.nsone.net.
+;; from j.gtld-servers.net in 60 ms
+github.com. 60     IN A  20.217.135.5
+;; from dns4.p08.nsone.net in 71 ms</pre>
+      <div class="tags">
+        <span class="tag">main sign = root server</span>
+        <span class="tag">wing sign = TLD server</span>
+        <span class="tag">pointer = referral (NS)</span>
+      </div>
+      <p class="big-idea">Only the last server knows the address. The rest just point.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="GitHub's card cabinet opens its A drawer and hands over a card for github.com with the address 20.217.135.5 and a TTL 60 stamp">
+        <rect x="20" y="28" width="120" height="160" rx="10" class="f-surface s-ink" stroke-width="3"/>
+        <rect x="32" y="40" width="96" height="40" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+        <text x="44" y="65" class="svg-t" text-anchor="start">A</text>
+        <rect x="98" y="56" width="20" height="7" rx="3.5" class="f-line"/>
+        <rect x="32" y="88" width="96" height="40" rx="6" class="f-bg s-line" stroke-width="2"/>
+        <text x="44" y="113" class="svg-t" text-anchor="start">AAAA</text>
+        <rect x="98" y="104" width="20" height="7" rx="3.5" class="f-line"/>
+        <rect x="32" y="136" width="96" height="40" rx="6" class="f-bg s-line" stroke-width="2"/>
+        <text x="44" y="161" class="svg-t" text-anchor="start">MX</text>
+        <rect x="98" y="152" width="20" height="7" rx="3.5" class="f-line"/>
+        <text x="80" y="208" text-anchor="middle" class="svg-tm">authoritative</text>
+        <path d="M130 60 C144 60, 150 64, 160 70" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="162" y="44" width="158" height="104" rx="8" class="f-surface s-ink" stroke-width="2.5"/>
+        <text x="176" y="70" class="svg-t" text-anchor="start">github.com  A</text>
+        <text x="176" y="98" class="svg-tb" text-anchor="start">20.217.135.5</text>
+        <rect x="176" y="114" width="64" height="7" rx="3.5" class="f-line"/>
+        <circle cx="288" cy="150" r="28" class="f-accent"/>
+        <text x="288" y="147" text-anchor="middle" class="svg-ta">TTL</text>
+        <text x="288" y="164" text-anchor="middle" class="svg-ta">60 s</text>
+        <text x="216" y="208" text-anchor="middle" class="svg-tm">AA bit set</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">4</div><h2>GitHub's own cabinet hands over the real card</h2></div>
+      <p>GitHub's name server holds the real <b>card</b> for <code>github.com</code>. Every card carries a date stamp: how long a copy may be trusted. This one says 60 seconds.</p>
+      <p>The <b>authoritative</b> server answers from its own zone and sets the <code>AA</code> (Authoritative Answer) bit. The card is a resource record: a name, a type, a <b>TTL</b> in seconds and the data.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Type</th><th>The card holds</th></tr></thead>
+          <tbody>
+            <tr><td><code>A</code></td><td>an IPv4 address, such as <code>20.217.135.5</code></td></tr>
+            <tr><td><code>AAAA</code></td><td>an IPv6 address</td></tr>
+            <tr><td><code>CNAME</code></td><td>another name to look up instead</td></tr>
+            <tr><td><code>NS</code></td><td>the name servers of a zone</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tags">
+        <span class="tag">cabinet = authoritative server</span>
+        <span class="tag">card = resource record</span>
+        <span class="tag">date stamp = TTL</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="The resolver's box of copies holds github.com A with 46 seconds left and the com. pointer with 2 days left; an expired card drops into the bin">
+        <text x="125" y="28" text-anchor="middle" class="svg-tb">resolver cache</text>
+        <rect x="20" y="40" width="210" height="146" rx="10" class="f-surface s-ink" stroke-width="3"/>
+        <rect x="34" y="56" width="182" height="36" rx="6" class="f-accent"/>
+        <text x="46" y="79" class="svg-ta" text-anchor="start">github.com A</text>
+        <text x="204" y="79" class="svg-ta" text-anchor="end">46 s</text>
+        <rect x="34" y="102" width="182" height="36" rx="6" class="f-bg"/>
+        <text x="46" y="125" class="svg-t" text-anchor="start">com. NS</text>
+        <text x="204" y="125" class="svg-t" text-anchor="end">2 days</text>
+        <rect x="34" y="148" width="182" height="24" rx="6" class="f-bg"/>
+        <rect x="46" y="157" width="70" height="7" rx="3.5" class="f-line"/>
+        <rect x="170" y="157" width="34" height="7" rx="3.5" class="f-line"/>
+        <path d="M232 70 C250 62, 258 58, 264 56" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="264" y="40" width="48" height="32" rx="4" class="f-surface s-line" stroke-width="2"/>
+        <text x="288" y="61" text-anchor="middle" class="svg-tm">0 s</text>
+        <path d="M288 76 L288 98" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <rect x="250" y="104" width="76" height="8" rx="3" class="f-muted"/>
+        <path d="M256 112 L320 112 L312 186 L264 186 Z" class="f-line"/>
+        <text x="288" y="206" text-anchor="middle" class="svg-tm">TTL 0: bin</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">5</div><h2>The librarian keeps copies until the stamp runs out</h2></div>
+      <p>The librarian copies every card and every pointer it gets. The next person who asks gets the copy at once. When the stamp runs out, the copy goes in the bin, and the next question walks again.</p>
+      <p>A resolver <b>caches</b> each record and counts its TTL down. One query to <code>1.1.1.1</code> came back with TTL <code>46</code>: a copy, 14 seconds old. The <code>com.</code> referral lives for <code>172800</code> seconds (2 days), so later walks for any <code>.com</code> name skip the root.</p>
+      <div class="ba">
+        <div>
+          <h3>First asker</h3>
+          <ul>
+            <li>Three more hops: root, <code>com.</code>, GitHub.</li>
+            <li>About 200 ms here (65 + 60 + 71).</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Next asker</h3>
+          <ul>
+            <li>The librarian reads the copy.</li>
+            <li>7 ms here, one round trip.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag">desk copies = resolver cache</span>
+        <span class="tag">bin = dropped at TTL 0</span>
+      </div>
+      <p class="big-idea">A copy costs one round trip. A full walk costs four.</p>
+    </div>
+  </section>
+
+  <section class="status" aria-labelledby="end">
+    <h2 id="end">Before you rely on it</h2>
+    <ul>
+      <li><span class="pill no">catch</span><span>A changed record does not spread by itself. Each resolver serves its old copy until the TTL runs out. Before a move, lower the TTL, then wait out the old one.</span></li>
+      <li><span class="pill new">ask next</span><span><b>What if GitHub's name server is down?</b> <code>github.com</code> lists eight name servers at two providers, so the resolver tries another. If none answer, your laptop gets <code>SERVFAIL</code>.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Why does a brand-new name fail for a while?</b> If someone asked before it existed, resolvers cached the "no" (<code>NXDOMAIN</code>). The "no" lives for the negative TTL from the zone's <code>SOA</code> record. For <code>github.com</code>, that is 3600 seconds.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Can someone fake the answer?</b> Plain DNS is unsigned UDP, so a forged reply can slip in. <code>DNSSEC</code> signs records. DNS over HTTPS or TLS encrypts the hop from your laptop.</span></li>
+      <li><span class="pill new">simplified</span><span>Each server drawn is a group: 13 root names on hundreds of machines, 13 <code>com.</code> servers, 8 for GitHub. CNAME chains, IPv6, DNSSEC and query name minimisation are left out.</span></li>
+      <li><span class="pill yes">sources</span><span>RFCs <a href="https://www.rfc-editor.org/rfc/rfc1034">1034</a>, <a href="https://www.rfc-editor.org/rfc/rfc1035">1035</a>, <a href="https://www.rfc-editor.org/rfc/rfc2308">2308</a> (negative caching), <a href="https://www.rfc-editor.org/rfc/rfc9156">9156</a> (minimisation), <a href="https://www.rfc-editor.org/rfc/rfc9499">9499</a> (terms) and the <a href="https://www.iana.org/domains/root/servers">IANA root server list</a>. Addresses, TTLs and times measured with <code>dig</code> on 1 Nov 2026. Yours will differ.</span></li>
+      <li><span class="pill no">not verified</span><span>How long the browser and the OS keep their copies, and the order they check. It varies by browser and OS.</span></li>
+    </ul>
+  </section>
+
 </main>
 </body>
 </html>
