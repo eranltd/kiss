@@ -78,8 +78,8 @@ pre code{background:none;padding:0;font-size:inherit}
 .zoom::before{content:none}
 .zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
 .zoom-body{display:contents}
-.zoom h2{grid-area:head;align-self:end;display:flex;align-items:center;gap:14px;position:static}
-.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:none}
+.zoom h2{grid-area:head;align-self:end;position:relative;display:block;padding:8px 0 8px 66px;min-height:52px}
+.zoom h2::before{content:counter(zoom);position:absolute;left:0;top:50%;right:auto;transform:translateY(-50%);width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent)}
 .zoom .drawing{grid-area:pic;align-self:center}
 .zoom .words{grid-area:words;align-self:start}
 @media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
@@ -417,7 +417,7 @@ S: 250 OK</code></pre>
           <figcaption>Yellow: the <code>INBOX</code> drawer, because the letter stays on the server and Bob's app only reads it.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> A <strong>spam filter</strong> reads the letter and picks a drawer: Inbox or Junk. Bob's app opens the drawer with IMAP. The letter stays in the cabinet, so his laptop sees it too.</p>
+          <p><strong>In plain words.</strong> A <strong>spam filter</strong> reads the letter and picks a drawer: Inbox or Junk. Bob's app opens the drawer with IMAP. The letter stays in the cabinet, so Bob's laptop sees it too.</p>
           <div class="hood"><p><strong>Under the hood.</strong> IMAP listens on port <code>993</code> (TLS) or <code>143</code>. <code>INBOX</code> is the main mailbox, and flags such as <code>\Seen</code> live on the server. With <code>IDLE</code>, the server tells the app the moment a letter lands (<code>* 4 EXISTS</code>).</p></div>
           <div class="tags"><span class="tag">clerk = spam filter</span><span class="tag">cabinet = mailbox store</span><span class="tag">drawer = IMAP mailbox</span></div>
         </div>

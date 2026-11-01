@@ -3,152 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Signed Note</title>
+<title>Google's Signed Note</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-/* Layout: a printed manual marked up in red pen. The hero shows the whole cast at a glance; each zoom draws one part with the same characters, then says it twice: in plain words and under the hood. */
-:root{
-  --paper:oklch(98.4% .005 250); --paper-2:oklch(95.4% .007 250); --ink:oklch(22% .03 258); --ink-2:oklch(38% .025 258);
-  --muted:oklch(47% .02 258); --rule:oklch(87% .009 250); --accent:oklch(54% .19 33);
-  --band:var(--ink); --band-ink:var(--paper); --band-chip:oklch(31% .03 258);
-  --c-blue:oklch(86% .07 240); --c-green:oklch(88% .08 150); --c-yellow:oklch(92% .1 95); --c-pink:oklch(87% .07 10); --c-gray:oklch(92% .01 250);
-  --serif:"Newsreader",ui-serif,Georgia,serif; --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  --space-xs:8px; --space-sm:12px; --space-md:16px; --space-lg:24px; --space-xl:40px; --space-2xl:64px;
-  --space-section:clamp(4rem,2rem + 8vw,9rem); --gutter:clamp(1rem,4vw,4rem); --hang:clamp(2.25rem,1rem + 5vw,6rem);
-  --text-sm:.9375rem; --text-md:1rem; --text-plain:clamp(1.125rem,1rem + .55vw,1.375rem); --text-lead:clamp(1.25rem,1rem + 1vw,1.625rem);
-  --text-section:clamp(1.625rem,1.1rem + 1.9vw,2.625rem); --text-statement:clamp(2rem,1.1rem + 3.2vw,3.5rem); --text-display:clamp(2.375rem,1.2rem + 4.2vw,4.25rem);
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
-  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
-  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
-  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
-  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
-  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
-  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
-  color-scheme:dark;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0}
-html,body{overflow-x:clip}
-body{background:var(--paper);color:var(--ink);font:400 var(--text-plain)/1.6 var(--serif);-webkit-font-smoothing:antialiased}
-.wrap{max-width:75rem;margin-inline:auto;padding-inline:var(--gutter);display:grid;grid-template-columns:var(--hang) minmax(0,1fr)}
-.wrap>*{grid-column:1/-1;min-width:0}
-@media (min-width:48rem){.wrap>*{grid-column:2}}
-h1,h2{font-family:var(--serif);font-weight:600;text-wrap:balance;overflow-wrap:break-word}
-h1{font-size:var(--text-display);line-height:1.04;letter-spacing:-.022em;max-width:22ch}
-h2{font-size:var(--text-section);line-height:1.12;letter-spacing:-.015em;max-width:30ch}
-p{text-wrap:pretty;max-width:60ch}
-strong{font-weight:600}
-a{color:inherit;text-decoration-color:var(--accent);text-decoration-thickness:1.5px;text-underline-offset:.2em}
-a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-code{font:400 .86em/1 var(--mono);background:var(--paper-2);padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}
-pre{font:400 var(--text-sm)/1.6 var(--mono);background:var(--paper-2);padding:var(--space-md);border-radius:3px;overflow-x:auto;max-width:60ch}
-pre code{font-size:inherit;background:none;padding:0}
-
-.hero{padding-block:var(--space-section) var(--space-2xl)}
-.lede{font-size:var(--text-lead);line-height:1.45;color:var(--muted);max-width:44ch;margin-top:var(--space-lg)}
-
-/* The glance: the whole cast in a row on wide screens, a column on phones. */
-.cast{list-style:none;padding:0;margin-top:var(--space-2xl);display:flex;flex-wrap:wrap;gap:var(--space-lg) var(--space-xl)}
-.cast li{position:relative;display:grid;justify-items:center;align-content:start;gap:4px;width:7.5rem;text-align:center;font:400 var(--text-sm)/1.3 var(--sans)}
-.cast li+li::before{content:"";position:absolute;left:calc(var(--space-xl) * -1 + 6px);top:1.9rem;width:calc(var(--space-xl) - 12px);height:12px;background:var(--ink-2);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat;
-          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat}
-.cast .ico{width:4.5rem;height:4.5rem;overflow:visible}
-.cast b{font-weight:600}
-.cast code{font-size:.8em}
-.cast li.hl::after{content:"";position:absolute;inset:-.7rem -.5rem;border:2.5px solid var(--accent);border-radius:46% 54% 42% 58%/56% 44% 56% 44%;transform:rotate(-4deg);pointer-events:none}
-@media (max-width:40rem){
-  .cast{flex-direction:column;gap:var(--space-xl)}
-  .cast li{width:auto;grid-template-columns:4rem minmax(0,1fr);justify-items:start;align-items:center;text-align:left;column-gap:var(--space-md)}
-  .cast li>:not(.ico){grid-column:2}
-  .cast li .ico{grid-row:1/span 2;width:4rem;height:4rem}
-  .cast li+li::before{left:1.4rem;top:calc(var(--space-xl) * -1 + 4px);width:calc(var(--space-xl) - 8px);height:12px;transform-origin:left center;transform:rotate(90deg) translateY(-50%)}
-  .cast li.hl::after{inset:-.6rem -.6rem;right:auto;width:min(100%,18rem)}
-}
-.caption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted);margin-top:var(--space-lg)}
-.glance-words{margin-top:var(--space-md)}
-
-/* Zooms: a numbered list. The number hangs left of the claim; the drawing and the words sit side by side on wide screens. */
-.zooms{list-style:none;padding:0;counter-reset:zoom}
-.zoom{counter-increment:zoom;row-gap:var(--space-lg);padding-block:0 var(--space-section)}
-.zoom::before{content:"";grid-column:1/-1;border-top:2px solid var(--ink);margin-bottom:var(--space-xl)}
-.zoom h2{grid-column:2;position:relative}
-.zoom h2::before{content:counter(zoom);position:absolute;right:100%;padding-right:var(--space-sm);color:var(--accent);font-variant-numeric:lining-nums tabular-nums}
-@media (min-width:48rem){.zoom h2::before{padding-right:var(--space-lg)}}
-.zoom-body{display:grid;gap:var(--space-lg);align-items:start}
-@media (min-width:64rem){.zoom-body{grid-template-columns:minmax(0,31rem) minmax(0,1fr);gap:var(--space-2xl)}}
-.words{display:grid;gap:var(--space-md)}
-.hood{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);border-left:1px solid var(--rule);padding-left:var(--space-md)}
-.hood strong{color:var(--ink)}
-.hood ol{padding-left:1.2em;display:grid;gap:4px}
-.hood>*+*{margin-top:var(--space-xs)}
-
-/* Drawings: 400 units wide, so a phone shows them at about 80% with readable labels. */
-.drawing{display:grid;gap:var(--space-xs)}
-.drawing svg{display:block;width:100%;max-width:31rem;height:auto;overflow:visible}
-.drawing figcaption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted)}
-.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:url(#rough)}
-.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.dot{fill:var(--ink)}
-.wire{stroke:var(--ink-2);stroke-width:2;fill:none;stroke-linecap:round}
-.hot{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round}
-.cut{stroke-dasharray:6 6}
-.life{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 6;stroke-linecap:round}
-.pen{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
-.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
-.n{font:600 15px var(--sans);fill:var(--ink);text-anchor:middle}
-.t{font:400 13px var(--mono);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l{font:400 14px var(--sans);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l.h{fill:var(--accent);font-weight:600}
-.start{text-anchor:start}
-.end{text-anchor:end}
-.num-bg{fill:var(--ink)}
-.num{font:600 11px var(--mono);fill:var(--paper);text-anchor:middle}
-.tip{fill:var(--ink-2)}
-.tip-hot{fill:var(--accent)}
-
-/* The catch: the one change of paper on the page. */
-.catch{background:var(--band);color:var(--band-ink);padding-block:var(--space-section)}
-.catch h2{font-size:var(--text-statement);line-height:1.06;max-width:20ch}
-.catch p{max-width:58ch;margin-top:var(--space-lg)}
-.catch code{background:var(--band-chip)}
-
-.further{padding-block:var(--space-section) 0}
-.further h2{margin-bottom:var(--space-lg)}
-.further details{border-top:1px solid var(--rule);padding-block:var(--space-md);max-width:48rem}
-.further details:last-child{border-bottom:1px solid var(--rule)}
-.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:600 var(--text-md)/1.5 var(--sans)}
-.further summary::-webkit-details-marker{display:none}
-.further summary::before{content:"+";font-family:var(--mono);color:var(--accent)}
-.further details[open] summary::before{content:"−"}
-.further details p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);margin:var(--space-xs) 0 0 1.5rem}
-
-/* Decision pages only. */
-.compare{display:grid;gap:var(--space-xl)}
-.compare>*{border-top:1px solid var(--rule);padding-top:var(--space-md)}
-.compare>.pick{border-top:3px solid var(--accent)}
-.compare h3{font:600 var(--text-md)/1.4 var(--sans);margin-bottom:var(--space-xs)}
-.compare p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2)}
-@media (min-width:48rem){.compare{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.table{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font:400 var(--text-md)/1.5 var(--sans)}
-th,td{text-align:left;vertical-align:top;padding:var(--space-sm) var(--space-md) var(--space-sm) 0;border-bottom:1px solid var(--rule)}
-th{font-weight:600;color:var(--muted)}
-
-.colophon{padding-block:var(--space-2xl) var(--space-section);font:400 var(--text-sm)/1.6 var(--sans);color:var(--muted)}
-.colophon p+p{margin-top:var(--space-xs)}
-.colophon strong{color:var(--ink)}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
-
-/* kiss skin: post office */
 /* Layout: a post-office story told top to bottom. The hero names the route as pills; each zoom is a stamped step, picture card left, few words right. */
 :root{
   --bg:#F2F5F9; --paper:#FFFFFF; --paper-2:#E8EEF6; --ink:#15223A; --ink-2:#33415C; --muted:#586982; --rule:#CAD4E2;
@@ -196,31 +55,34 @@ pre code{background:none;padding:0;font-size:inherit}
 /* The glance: the route as pills, a character in each; the deciding stop is stamped. */
 .cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
 .cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
-.cast li+li::before{content:"→";position:absolute;left:-25px;top:50%;transform:translateY(-50%);width:auto;height:auto;background:none;-webkit-mask:none;mask:none;color:var(--muted);font:400 16px/1 var(--mono)}
+.cast li+li::before{content:none}
+.cast li:not(:last-child)::after{content:"→";position:absolute;right:-25px;left:auto;top:50%;bottom:auto;inset:auto -25px auto auto;width:auto;height:auto;border:0;border-radius:0;transform:translateY(-50%);background:none;color:var(--muted);font:400 16px/1 var(--mono);pointer-events:none}
 .cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
 .cast b{font-weight:700}
 .cast code{background:none;padding:0;color:var(--muted);font-size:12px}
 .cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
-.cast li.hl::after{content:none}
+.cast li.hl:last-child::after{content:none}
 @media (max-width:40rem){
   .cast{flex-direction:column;align-items:flex-start;gap:26px}
   .cast li{display:inline-flex;grid-template-columns:none;width:auto}
   .cast li .ico{grid-row:auto;width:30px;height:30px}
   .cast li>:not(.ico){grid-column:auto}
-  .cast li+li::before{content:"↓";left:20px;top:-22px;transform:none;width:auto;height:auto}
+  .cast li:not(:last-child)::after{content:"↓";inset:auto auto -24px 20px;transform:none}
 }
 .caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
 .glance-words{margin:0}
 
-/* Zooms: stamped steps, picture card left, words right; dashed seams between. */
+/* Zooms: picture card left; stamp, claim and words right; dashed seams between. */
 .zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
-.zoom{counter-increment:zoom;display:grid;gap:18px;padding:0}
+.zoom{counter-increment:zoom;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"pic head" "pic words";column-gap:40px;row-gap:14px;align-content:center;padding:0}
 .zoom::before{content:none}
 .zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
-.zoom h2{display:flex;align-items:center;gap:14px;position:static;grid-column:auto}
-.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:rotate(-3deg)}
-.zoom-body{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:36px;align-items:center}
-@media (max-width:760px){.zoom-body{grid-template-columns:minmax(0,1fr);gap:20px}}
+.zoom-body{display:contents}
+.zoom h2{grid-area:head;align-self:end;position:relative;display:block;padding:8px 0 8px 66px;min-height:52px}
+.zoom h2::before{content:counter(zoom);position:absolute;left:0;top:50%;right:auto;transform:translateY(-50%);width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.zoom .drawing{grid-area:pic;align-self:center}
+.zoom .words{grid-area:words;align-self:start}
+@media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
 .drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
 .drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
 .drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
@@ -238,6 +100,14 @@ pre code{background:none;padding:0;font-size:inherit}
 .pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
 .pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
 
+/* Scene paint: flat fills and thick ink, from the tokens. */
+.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-line{stroke:var(--rule)}
+.f-surface{fill:var(--paper)} .f-bg{fill:var(--bg)} .f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-line{fill:var(--rule)}
+.f-accent{fill:var(--accent)} .f-yes{fill:var(--yes)} .f-no{fill:var(--no)} .f-blue{fill:var(--blue)}
+.svg-t{font:400 12px var(--mono);fill:var(--ink)}
+.svg-tm{font:400 11px var(--mono);fill:var(--muted)}
+.svg-tb{font:700 15px var(--display);fill:var(--ink)}
+.svg-ta{font:700 14px var(--display);fill:var(--accent-ink)}
 /* SVG paint comes from tokens, so dark mode follows. */
 .o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .dot{fill:var(--ink)}
@@ -299,7 +169,6 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
 <!-- The cast. Actors have faces; objects do not. Recolor one use with style="--fill:var(--c-pink)". If the cast lacks something, draw it the same way: 64×64, class "o" outline, one crayon fill, a face only for an actor. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <filter id="rough" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1400" height="1400"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--hot)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
@@ -307,7 +176,8 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
   <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
   <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
-  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--accent)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--no)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-laptop" viewBox="0 0 64 64"><rect class="o" x="12" y="12" width="40" height="30" rx="4" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M5 50h54l-5-8H10z" style="fill:var(--fill,var(--c-gray))"/><circle class="dot" cx="26" cy="25" r="2.3"/><circle class="dot" cx="38" cy="25" r="2.3"/><path class="o" d="M27 32q5 3.5 10 0"/></symbol>
   <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
   <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
   <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
@@ -321,160 +191,204 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <symbol id="ico-bolt" viewBox="0 0 64 64"><path class="o" d="M37 4L14 36h15l-4 24 25-34H35z" style="fill:var(--fill,var(--c-yellow))"/></symbol>
   <symbol id="ico-stop" viewBox="0 0 64 64"><path class="o" d="M22 6h20l14 14v20L42 54H22L8 40V20z" style="fill:var(--fill,var(--c-pink))"/><path class="o" d="M24 22l16 16M40 22L24 38"/></symbol>
   <symbol id="ico-check" viewBox="0 0 64 64"><circle class="o" cx="32" cy="32" r="24" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 33l8 8 15-17"/></symbol>
+  <!-- Scene props: the metaphor's objects. -->
+  <symbol id="ico-cabinet" viewBox="0 0 64 64"><rect class="o" x="12" y="5" width="40" height="54" rx="4" style="fill:var(--fill,var(--c-gray))"/><rect class="o" x="17" y="10" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="26" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="42" width="30" height="13" rx="2" style="fill:var(--paper)"/><path class="o" d="M28 16.5h8M28 32.5h8M28 48.5h8"/></symbol>
+  <symbol id="ico-book" viewBox="0 0 64 64"><path class="o" d="M32 15c-6-4-14-5-24-4v40c10-1 18 0 24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 15c6-4 14-5 24-4v40c-10-1-18 0-24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M14 23c5-.5 9 0 13 1.5M14 31c5-.5 9 0 13 1.5M14 39c5-.5 9 0 13 1.5M37 24.5c4-1.5 8-2 13-1.5M37 32.5c4-1.5 8-2 13-1.5"/></symbol>
+  <symbol id="ico-bell" viewBox="0 0 64 64"><path class="o" d="M18 44c3-4 4-8 4-15a10 10 0 0 1 20 0c0 7 1 11 4 15z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M14 44h36M28 50a4 4 0 0 0 8 0M32 9v4M8 22l5 3M56 22l-5 3"/></symbol>
+  <symbol id="ico-bin" viewBox="0 0 64 64"><path class="o" d="M16 20h32l-3 36H19z" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M11 20h42M26 20v-6h12v6M26 28v20M32 28v20M38 28v20"/></symbol>
+  <symbol id="ico-door" viewBox="0 0 64 64"><path class="o" d="M16 58V12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v46z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M10 58h44"/><circle class="dot" cx="41" cy="35" r="2.6"/></symbol>
+  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--no)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
+  <symbol id="ico-search" viewBox="0 0 64 64"><circle class="o" cx="27" cy="27" r="16" style="fill:var(--fill,var(--paper))"/><path class="o" d="M39 39l15 15" style="stroke-width:5"/><path class="o" d="M19 23a9 9 0 0 1 7-6"/></symbol>
+  <symbol id="ico-switch-on" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-green))"/><circle class="o" cx="45" cy="32" r="9" style="fill:var(--paper)"/></symbol>
+  <symbol id="ico-switch-off" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="19" cy="32" r="9" style="fill:var(--paper)"/></symbol>
 </svg>
 
 <main>
   <header class="wrap hero">
-    <h1>One Tap is a signed note from Google that your server must check.</h1>
-    <p class="lede">You open a site for the first time, and a small card says <strong>Continue as Ana</strong>. You tap once, and you are signed in, with no form and no password.</p>
+    <h1>Google hands the site a signed note that says who you are.</h1>
+    <p class="lede">You open <code>example.com</code> while signed in to Google, and a card offers <b>Continue as Alex</b>. One tap later the site knows who you are, and you never typed a password.</p>
     <ol class="cast" aria-label="The whole flow at a glance">
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-person"/></svg><b>You</b><code>active session</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-browser"/></svg><b>Your browser</b><code>FedCM</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-server" style="--fill:var(--c-yellow)"/></svg><b>Google</b><code>IdP</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-letter"/></svg><b>Signed note</b><code>credential</code></li>
-      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-server"/></svg><b>Your server</b><code>verifyIdToken</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-browser"/></svg><b>The site's page</b><code>gsi/client</code></li>
+      <li><svg class="ico" viewBox="0 0 64 64" aria-hidden="true"><rect class="o" x="9" y="12" width="46" height="40" rx="6" style="fill:var(--paper)"/><circle class="o" cx="21" cy="25" r="5" style="fill:var(--c-pink)"/><path class="o" d="M31 23h16M31 29h10"/><rect class="o" x="15" y="37" width="34" height="9" rx="4.5" style="fill:var(--blue)"/></svg><b>The card</b><code>prompt()</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-person"/></svg><b>You</b><code>Continue</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-server" style="--fill:var(--c-gray)"/></svg><b>Google</b><code>accounts.google.com</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-letter"/></svg><b>Signed note</b><code>ID token (JWT)</code></li>
+      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-server"/></svg><b>Your server's check</b><code>aud · iss · exp</code></li>
     </ol>
-    <p class="caption">Marked: your server, because the card and the note prove nothing until it checks Google's signature. The drawings below zoom into each part.</p>
-    <p class="glance-words"><strong>In plain words.</strong> Google already knows you are signed in to it in this browser. When a site asks, the browser shows a card. Your tap tells Google to write a note for that site, "this is Ana", and to <strong>sign</strong> it. The site's server checks the signature, then signs you in.</p>
+    <p class="caption">Marked: your server's check, because the note means nothing until the server tests Google's seal. The drawings below zoom into each part.</p>
+    <p class="glance-words"><strong>In plain words.</strong> Think of a signed note of introduction. The site asks, the browser shows you a card, and you agree with one tap. Google writes a short note about you, addressed to this site, and seals it. Your server checks the seal and the address, then signs you in.</p>
   </header>
 
   <ol class="zooms">
     <li class="wrap zoom">
-      <h2>The card shows up only when Google already knows you.</h2>
+      <h2>The page only asks; the browser draws the card.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 290" role="img" aria-label="The page in your browser asks Google who is signed in. Google answers that Ana is, because she has an active session. The browser then shows you a card that says Continue as Ana.">
-            <use href="#ico-person" x="34" y="4" width="52" height="52"/>
-            <use href="#ico-browser" x="174" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52" style="--fill:var(--c-yellow)"/>
-            <text class="n" x="60" y="74">You</text><text class="t" x="60" y="90">active session</text>
-            <text class="n" x="200" y="74">Browser</text><text class="t" x="200" y="90">FedCM</text>
-            <text class="n" x="340" y="74">Google</text><text class="t" x="340" y="90">IdP</text>
-            <line class="life" x1="60" y1="100" x2="60" y2="282"/><line class="life" x1="200" y1="100" x2="200" y2="282"/><line class="life" x1="340" y1="100" x2="340" y2="282"/>
-            <circle class="num-bg" cx="20" cy="135" r="9"/><text class="num" x="20" y="139">1</text>
-            <line class="wire" x1="202" y1="135" x2="336" y2="135" marker-end="url(#arrow)"/><text class="l" x="270" y="127">who is signed in?</text><text class="t" x="270" y="153">prompt()</text>
-            <circle class="num-bg" cx="20" cy="190" r="9"/><text class="num" x="20" y="194">2</text>
-            <line class="hot" x1="338" y1="190" x2="204" y2="190" marker-end="url(#arrow-hl)"/><text class="l h" x="270" y="182">Ana is signed in</text>
-            <ellipse class="pen" cx="270" cy="185" rx="74" ry="20" transform="rotate(-4 270 185)"/>
-            <circle class="num-bg" cx="20" cy="248" r="9"/><text class="num" x="20" y="252">3</text>
-            <line class="wire" x1="198" y1="248" x2="64" y2="248" marker-end="url(#arrow)"/>
-            <rect class="box" x="72" y="230" width="116" height="36" rx="6"/><text class="l" x="130" y="253">Continue as Ana</text>
+          <svg viewBox="0 0 340 216" role="img" aria-label="A blue browser window shows the page for example.com with a prompt() chip. A solid arrow runs from the chip to a yellow card that sits on top of the browser's own toolbar. The card reads example.com, shows Alex with alex@gmail.com, and has a blue Continue button. A label above the card says browser UI, FedCM.">
+            <rect x="14" y="46" width="214" height="144" rx="10" class="s-ink" stroke-width="3" style="fill:var(--c-blue)"/>
+            <path d="M14 74 H228" fill="none" class="s-ink" stroke-width="2.5"/>
+            <circle cx="28" cy="60" r="2.6" class="f-ink"/>
+            <circle cx="38" cy="60" r="2.6" class="f-ink"/>
+            <circle cx="48" cy="60" r="2.6" class="f-ink"/>
+            <rect x="60" y="52" width="150" height="16" rx="8" class="f-surface s-ink" stroke-width="1.5"/>
+            <text x="72" y="64" text-anchor="start" class="svg-tm">example.com</text>
+            <rect x="24" y="84" width="194" height="96" rx="4" class="f-surface"/>
+            <rect x="36" y="98" width="110" height="8" rx="4" class="f-line"/>
+            <rect x="36" y="114" width="80" height="8" rx="4" class="f-line"/>
+            <rect x="36" y="130" width="96" height="8" rx="4" class="f-line"/>
+            <rect x="36" y="150" width="92" height="22" rx="6" class="s-ink" stroke-width="2" style="fill:var(--c-gray)"/>
+            <text x="82" y="165.5" text-anchor="middle" class="svg-t">prompt()</text>
+            <path d="M128 158 C152 158, 160 148, 166 136" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <rect x="172" y="30" width="154" height="124" rx="12" class="f-accent s-ink" stroke-width="3"/>
+            <text x="186" y="54" text-anchor="start" class="svg-ta">example.com</text>
+            <circle cx="198" cy="84" r="13" class="s-ink" stroke-width="2.5" style="fill:var(--c-pink)"/>
+            <text x="218" y="82" text-anchor="start" class="svg-ta">Alex</text>
+            <text x="218" y="98" text-anchor="start" class="svg-t" style="fill:var(--accent-ink);font-size:11px">alex@gmail.com</text>
+            <rect x="184" y="112" width="130" height="28" rx="14" class="f-blue s-ink" stroke-width="2"/>
+            <text x="249" y="130.5" text-anchor="middle" class="svg-t" style="fill:var(--paper);font-weight:600">Continue</text>
+            <text x="249" y="20" text-anchor="middle" class="svg-tm">browser UI · FedCM</text>
+            <text x="121" y="206" text-anchor="middle" class="svg-tm">the site's page</text>
           </svg>
-          <figcaption>Highlighted: step 2, because Google answers only when you have an active session. No session, no card.</figcaption>
+          <figcaption>Yellow: the card, because the browser draws it, not the page, and the page learns nothing until you tap.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> The site asks, and the <strong>browser</strong> asks Google who is signed in. If nobody is, nothing shows. If you are, the browser draws the card itself.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> (1) The page loads <code>gsi/client</code> and calls <code>google.accounts.id.prompt()</code>, and the browser asks Google for your signed-in accounts. (2) Google answers only from an active session; with several sessions you get an account chooser. (3) On Chrome 117 and later the browser owns the card (<code>FedCM</code>), shows the site's top-level domain, and needs no third-party cookies; the old <code>use_fedcm_for_prompt</code> switch is now ignored.</p></div>
-          <pre><code>// after https://accounts.google.com/gsi/client loads
-google.accounts.id.initialize({
-  client_id: "YOUR_CLIENT_ID",
-  callback: (response) =&gt; sendToServer(response.credential),
-});
-google.accounts.id.prompt();</code></pre>
+          <p><strong>In plain words.</strong> Your page loads Google's script and calls <code>prompt()</code>. That is a request, not a drawing. The browser shows the card itself, with the Google account it already knows.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> In Chrome the card is browser UI drawn through FedCM, so the page cannot move, style or cover it; the old opt-in flag <code>use_fedcm_for_prompt</code> is now ignored. The card shows only on HTTPS, and only when this browser has an active Google session.</p></div>
+<pre><code>&lt;script src="https://accounts.google.com/gsi/client" async&gt;&lt;/script&gt;
+&lt;script&gt;
+  window.onload = () =&gt; {
+    google.accounts.id.initialize({
+      client_id: "YOUR_CLIENT_ID",
+      callback: (r) =&gt; sendToServer(r.credential),
+    });
+    google.accounts.id.prompt();
+  };
+&lt;/script&gt;</code></pre>
+          <div class="tags"><span class="tag">card = One Tap prompt</span><span class="tag">script = gsi/client</span></div>
         </div>
       </div>
     </li>
 
     <li class="wrap zoom">
-      <h2>One tap turns into a note that Google signs.</h2>
+      <h2>One tap, and Google writes a signed note for this site.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 310" role="img" aria-label="You tap Continue as Ana. The browser passes your choice and the site's client ID to Google. Google sends back a signed note, the ID token, which the browser hands to the page as credential.">
-            <use href="#ico-person" x="34" y="4" width="52" height="52"/>
-            <use href="#ico-browser" x="174" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52" style="--fill:var(--c-yellow)"/>
-            <text class="n" x="60" y="74">You</text><text class="t" x="60" y="90">active session</text>
-            <text class="n" x="200" y="74">Browser</text><text class="t" x="200" y="90">FedCM</text>
-            <text class="n" x="340" y="74">Google</text><text class="t" x="340" y="90">IdP</text>
-            <line class="life" x1="60" y1="100" x2="60" y2="300"/><line class="life" x1="200" y1="100" x2="200" y2="300"/><line class="life" x1="340" y1="100" x2="340" y2="300"/>
-            <circle class="num-bg" cx="20" cy="135" r="9"/><text class="num" x="20" y="139">1</text>
-            <line class="wire" x1="62" y1="135" x2="196" y2="135" marker-end="url(#arrow)"/><text class="l" x="130" y="127">tap Continue</text>
-            <circle class="num-bg" cx="20" cy="182" r="9"/><text class="num" x="20" y="186">2</text>
-            <line class="wire" x1="202" y1="182" x2="336" y2="182" marker-end="url(#arrow)"/><text class="l" x="270" y="174">share Ana</text><text class="t" x="270" y="200">client_id</text>
-            <circle class="num-bg" cx="20" cy="250" r="9"/><text class="num" x="20" y="254">3</text>
-            <line class="hot" x1="338" y1="250" x2="204" y2="250" marker-end="url(#arrow-hl)"/>
-            <use href="#ico-letter" x="246" y="226" width="48" height="48"/>
-            <circle class="o" cx="287" cy="261" r="7" style="fill:var(--c-yellow)"/>
-            <text class="l h" x="270" y="230">signed note</text><text class="t" x="270" y="282">credential</text>
-            <ellipse class="pen" cx="270" cy="252" rx="60" ry="36" transform="rotate(-4 270 252)"/>
+          <svg viewBox="0 0 340 224" role="img" aria-label="Google, a gray server with a face, sends a solid arrow to a large note titled ID token. Its rows read aud 123-abc.apps, highlighted yellow, then iss accounts.google.com, sub 110169484, email alex@gmail.com and exp. A red wax seal labelled signature sits in the note's corner.">
+            <use href="#ico-server" x="10" y="70" width="84" height="84" style="--fill:var(--c-gray)"/>
+            <text x="52" y="176" text-anchor="middle" class="svg-tb">Google</text>
+            <path d="M84 112 H110" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <rect x="116" y="20" width="210" height="172" rx="8" class="f-surface s-ink" stroke-width="3"/>
+            <text x="130" y="44" text-anchor="start" class="svg-tb">ID token</text>
+            <path d="M128 54 H314" fill="none" class="s-line" stroke-width="2"/>
+            <rect x="124" y="62" width="194" height="25" rx="6" class="f-accent"/>
+            <text x="132" y="79" text-anchor="start" class="svg-t" style="fill:var(--accent-ink);font-weight:600">aud  123-abc.apps…</text>
+            <text x="132" y="106" text-anchor="start" class="svg-t">iss  accounts.google.com</text>
+            <text x="132" y="128" text-anchor="start" class="svg-t">sub  110169484…</text>
+            <text x="132" y="150" text-anchor="start" class="svg-t">email alex@gmail.com</text>
+            <text x="132" y="172" text-anchor="start" class="svg-t">exp  1767225600</text>
+            <circle cx="298" cy="172" r="14" class="f-no s-ink" stroke-width="2.5"/>
+            <circle cx="298" cy="172" r="6" fill="none" class="s-ink" stroke-width="1.5"/>
+            <text x="298" y="210" text-anchor="middle" class="svg-tm">signature</text>
           </svg>
-          <figcaption>Highlighted: step 3, because Google's signature is what makes the note worth anything.</figcaption>
+          <figcaption>Yellow: the <code>aud</code> line, because it names your client ID, so a note written for another site fails your check. The values are examples.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> Your tap is your yes. Google writes a short note for this one site, "this is Ana", and <strong>signs</strong> it. The browser hands the note to the page.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> (1) The tap is consent; a first-time user sees a consent step first. (2) The browser passes your choice to Google for this site's <code>client_id</code>. (3) Google returns an ID token, a base64-encoded JWT it signed, in <code>response.credential</code>, and <code>response.select_by</code> says how you got there: <code>fedcm</code> for a tap, <code>fedcm_auto</code> for automatic sign-in.</p></div>
+          <p><strong>In plain words.</strong> You tap <strong>Continue</strong>. Google writes a short note: who wrote it, who it is for, and who you are. Then it seals the note, so nobody can change a word.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> Your callback gets a <code>CredentialResponse</code>: <code>credential</code> is the ID token, a JWT in three dot-separated parts, and <code>select_by</code> says how you chose (<code>user</code>, <code>auto</code>, <code>fedcm</code>…). With <code>login_uri</code> instead of a callback, Google posts <code>credential</code> to your endpoint with a <code>g_csrf_token</code> that must match the cookie of the same name.</p></div>
+          <div class="tags"><span class="tag">signed note = ID token (JWT)</span><span class="tag">seal = JWT signature</span><span class="tag">addressee = aud (your client ID)</span><span class="tag">writer = iss</span></div>
         </div>
       </div>
     </li>
 
     <li class="wrap zoom">
-      <h2>The note names you by an ID, not by your email.</h2>
+      <h2>Your server trusts the note only after it checks Google's seal.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 300" role="img" aria-label="The signed note is a JWT with a header, the claims and Google's signature. The claims are iss accounts.google.com, aud your client ID, sub Ana's account ID, email, name and exp. The sub claim is circled.">
-            <use href="#ico-letter" x="24" y="24" width="64" height="64"/>
-            <text class="n" x="56" y="104">Signed note</text><text class="t" x="56" y="120">credential</text>
-            <rect class="box" x="116" y="24" width="254" height="252" rx="6"/>
-            <text class="t start" x="132" y="50">header</text>
-            <line class="wire" x1="116" y1="64" x2="370" y2="64"/>
-            <text class="t start" x="132" y="90">iss</text><text class="l start" x="196" y="90">accounts.google.com</text>
-            <text class="t start" x="132" y="114">aud</text><text class="l start" x="196" y="114">your client ID</text>
-            <text class="t start" x="132" y="138">sub</text><text class="l h start" x="196" y="138">Ana's account ID</text>
-            <text class="t start" x="132" y="162">email</text><text class="l start" x="196" y="162">ana@example.com</text>
-            <text class="t start" x="132" y="186">name</text><text class="l start" x="196" y="186">Ana</text>
-            <text class="t start" x="132" y="210">exp</text><text class="l start" x="196" y="210">expiry time</text>
-            <line class="wire" x1="116" y1="228" x2="370" y2="228"/>
-            <text class="l start" x="132" y="256">Google's signature</text>
-            <circle class="o" cx="340" cy="251" r="9" style="fill:var(--c-yellow)"/>
-            <ellipse class="pen" cx="240" cy="133" rx="118" ry="17" transform="rotate(-3 240 133)"/>
+          <svg viewBox="0 0 340 212" role="img" aria-label="A yellow key labelled oauth2/v3/certs points along a dashed curve to the red seal on a note. A solid arrow carries the note to your green server, which has four green checks below it: signature, aud, iss and exp.">
+            <circle cx="40" cy="38" r="17" class="f-accent s-ink" stroke-width="3"/>
+            <circle cx="40" cy="38" r="6" class="f-surface s-ink" stroke-width="2"/>
+            <path d="M57 38 H128 M116 38 V49 M104 38 V46" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <text x="22" y="76" text-anchor="start" class="svg-tm">oauth2/v3/certs</text>
+            <rect x="14" y="92" width="168" height="104" rx="8" class="f-surface s-ink" stroke-width="3"/>
+            <text x="28" y="116" text-anchor="start" class="svg-tb">ID token</text>
+            <rect x="28" y="128" width="100" height="8" rx="4" class="f-line"/>
+            <rect x="28" y="144" width="78" height="8" rx="4" class="f-line"/>
+            <rect x="28" y="160" width="92" height="8" rx="4" class="f-line"/>
+            <path d="M132 44 C162 64, 168 116, 154 151" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <circle cx="152" cy="168" r="15" class="f-no s-ink" stroke-width="2.5"/>
+            <circle cx="152" cy="168" r="6.5" fill="none" class="s-ink" stroke-width="1.5"/>
+            <path d="M184 116 C204 110, 220 96, 240 80" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <use href="#ico-server" x="242" y="10" width="84" height="84"/>
+            <text x="284" y="110" text-anchor="middle" class="svg-tm">your server</text>
+            <g transform="translate(222 124)">
+              <circle cx="8" cy="0" r="7" class="f-yes"/><path d="M4.5 0 l2.5 2.5 l4.5 -5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--paper)"/>
+              <text x="22" y="4" text-anchor="start" class="svg-t">signature</text>
+              <circle cx="8" cy="20" r="7" class="f-yes"/><path d="M4.5 20 l2.5 2.5 l4.5 -5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--paper)"/>
+              <text x="22" y="24" text-anchor="start" class="svg-t">aud</text>
+              <circle cx="8" cy="40" r="7" class="f-yes"/><path d="M4.5 40 l2.5 2.5 l4.5 -5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--paper)"/>
+              <text x="22" y="44" text-anchor="start" class="svg-t">iss</text>
+              <circle cx="8" cy="60" r="7" class="f-yes"/><path d="M4.5 60 l2.5 2.5 l4.5 -5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--paper)"/>
+              <text x="22" y="64" text-anchor="start" class="svg-t">exp</text>
+            </g>
           </svg>
-          <figcaption>Highlighted: <code>sub</code>, because it is the account's unique ID, while a Google Account can have different email addresses over time.</figcaption>
+          <figcaption>Yellow: Google's public key, because only a seal that matches it proves Google wrote the note.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> The note says who wrote it, who it is for, and who you are. Key the user on the <strong>account ID</strong> (<code>sub</code>), not on the email.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> The token is a JWT: a header, the claims, and Google's signature over both. The claims include <code>iss</code>, <code>aud</code>, <code>sub</code>, <code>email</code>, <code>email_verified</code>, <code>name</code>, <code>picture</code> and <code>exp</code>. Store <code>sub</code> with the user and treat <code>email</code> as contact data.</p></div>
+          <p><strong>In plain words.</strong> Anyone can write a note that says "I am Google". Your server tests the seal against Google's public key. Then it reads the addressee, the writer and the date.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> Fetch the keys from <code>https://www.googleapis.com/oauth2/v3/certs</code> and refetch when <code>Cache-Control</code> says, because they rotate. Then check that <code>aud</code> is your client ID, <code>iss</code> is <code>accounts.google.com</code> or <code>https://accounts.google.com</code>, and <code>exp</code> has not passed.</p></div>
+<pre><code>from google.oauth2 import id_token
+from google.auth.transport import requests
+
+info = id_token.verify_oauth2_token(
+    credential, requests.Request(), CLIENT_ID)  # seal, aud, exp
+if info["iss"] not in ("accounts.google.com",
+                       "https://accounts.google.com"):
+    raise ValueError("not from Google")
+user_id = info["sub"]</code></pre>
+          <div class="tags"><span class="tag">Google's key = public keys (oauth2/v3/certs)</span><span class="tag">seal check = verify_oauth2_token</span></div>
+          <p class="big">Reading the note is not checking it.</p>
         </div>
       </div>
     </li>
 
     <li class="wrap zoom">
-      <h2>Your server checks the signature before it trusts the name.</h2>
+      <h2>File the person under <code>sub</code>, never under the email.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 320" role="img" aria-label="The page posts the credential to your server. Your server uses Google's public keys, which it caches. Your server checks the signature, aud, iss and exp. Then it sends back its own session cookie.">
-            <use href="#ico-browser" x="34" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="174" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52" style="--fill:var(--c-yellow)"/>
-            <text class="n" x="60" y="74">Browser</text><text class="t" x="60" y="90">callback()</text>
-            <text class="n" x="200" y="74">Your server</text><text class="t" x="200" y="90">verifyIdToken</text>
-            <text class="n" x="340" y="74">Google</text><text class="t" x="340" y="90">public keys</text>
-            <line class="life" x1="60" y1="100" x2="60" y2="310"/><line class="life" x1="200" y1="100" x2="200" y2="310"/><line class="life" x1="340" y1="100" x2="340" y2="310"/>
-            <circle class="num-bg" cx="20" cy="135" r="9"/><text class="num" x="20" y="139">1</text>
-            <line class="wire" x1="62" y1="135" x2="196" y2="135" marker-end="url(#arrow)"/>
-            <use href="#ico-letter" x="112" y="117" width="36" height="36"/><text class="t" x="130" y="115">POST credential</text>
-            <circle class="num-bg" cx="20" cy="185" r="9"/><text class="num" x="20" y="189">2</text>
-            <line class="wire cut" x1="338" y1="185" x2="204" y2="185" marker-end="url(#arrow)"/>
-            <use href="#ico-key" x="252" y="167" width="36" height="36"/><text class="t" x="270" y="165">keys, cached</text>
-            <circle class="num-bg" cx="20" cy="241" r="9"/><text class="num" x="20" y="245">3</text>
-            <rect class="box" x="134" y="216" width="132" height="50" rx="6"/>
-            <text class="l h" x="200" y="237">signature · aud</text><text class="l h" x="200" y="257">iss · exp</text>
-            <ellipse class="pen" cx="200" cy="241" rx="84" ry="36" transform="rotate(-4 200 241)"/>
-            <circle class="num-bg" cx="20" cy="298" r="9"/><text class="num" x="20" y="302">4</text>
-            <line class="wire" x1="198" y1="298" x2="64" y2="298" marker-end="url(#arrow)"/><text class="l" x="130" y="290">session cookie</text>
+          <svg viewBox="0 0 340 224" role="img" aria-label="A gray filing cabinet has three drawers labelled by sub numbers; the top drawer, sub 1101, is yellow. Two notes sit to the right: one with sub 1101 and alex@example.com, and a later one with the same sub and alex@example.org. Both lines lead into the yellow drawer.">
+            <rect x="14" y="16" width="134" height="196" rx="8" class="s-ink" stroke-width="3" style="fill:var(--c-gray)"/>
+            <rect x="24" y="28" width="114" height="54" rx="4" class="f-accent s-ink" stroke-width="2.5"/>
+            <rect x="34" y="37" width="94" height="21" rx="3" class="f-surface s-ink" stroke-width="1.5"/>
+            <text x="81" y="52" text-anchor="middle" class="svg-t">sub 1101…</text>
+            <path d="M66 70 H96" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <rect x="24" y="92" width="114" height="54" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+            <rect x="34" y="101" width="94" height="21" rx="3" class="f-bg s-ink" stroke-width="1.5"/>
+            <text x="81" y="116" text-anchor="middle" class="svg-t">sub 1084…</text>
+            <path d="M66 134 H96" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <rect x="24" y="156" width="114" height="46" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+            <rect x="34" y="164" width="94" height="21" rx="3" class="f-bg s-ink" stroke-width="1.5"/>
+            <text x="81" y="179" text-anchor="middle" class="svg-t">sub 1177…</text>
+            <g transform="translate(184 24)">
+              <rect width="142" height="60" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+              <text x="12" y="25" text-anchor="start" class="svg-t">sub 1101…</text>
+              <text x="12" y="45" text-anchor="start" class="svg-tm">alex@example.com</text>
+            </g>
+            <text x="255" y="110" text-anchor="middle" class="svg-tm">later: new email</text>
+            <g transform="translate(184 124)">
+              <rect width="142" height="60" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+              <text x="12" y="25" text-anchor="start" class="svg-t">sub 1101…</text>
+              <text x="12" y="45" text-anchor="start" class="svg-tm">alex@example.org</text>
+            </g>
+            <path d="M184 50 C168 50, 158 46, 144 46" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <path d="M184 154 C160 154, 164 76, 144 66" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
           </svg>
-          <figcaption>Highlighted: step 3, because a note that fails any check is forged, expired, or made for another site.</figcaption>
+          <figcaption>Yellow: the drawer keyed by <code>sub</code>, because both notes land in it even though the email changed. The values are examples.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> The page sends the note to your server. Your server checks Google's <strong>signature</strong> and who the note is for. Only then does it sign you in, with its own cookie.</p>
-          <div class="hood"><p><strong>Under the hood.</strong> (1) The page posts <code>credential</code> to your server; in redirect mode, also match the <code>g_csrf_token</code> cookie against the same field in the body. (2–3) A library call such as <code>verifyIdToken()</code> checks the signature with Google's public keys, re-fetched only when <code>Cache-Control</code> says so, and checks that <code>aud</code> is your client ID, <code>iss</code> is <code>accounts.google.com</code> or <code>https://accounts.google.com</code>, and <code>exp</code> has not passed. (4) Then find or create the user by <code>sub</code> and set your own session cookie.</p></div>
-          <pre><code>import { OAuth2Client } from "google-auth-library";
-const client = new OAuth2Client();
-
-const ticket = await client.verifyIdToken({
-  idToken: req.body.credential,
-  audience: CLIENT_ID,
-});
-const userId = ticket.getPayload().sub;</code></pre>
+          <p><strong>In plain words.</strong> Every note carries a <strong>member number</strong> (<code>sub</code>). People change emails. The member number stays with the Google Account.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> Google says <code>sub</code> is unique among all Google Accounts and never reused, while one account can have several emails over time. Use <code>email</code> only to find an existing account, and treat it as proven only for <code>@gmail.com</code> addresses, or when <code>email_verified</code> is true and <code>hd</code> is set.</p></div>
+          <div class="tags"><span class="tag">member number = sub</span><span class="tag">drawer = your user record</span></div>
+          <p class="big">The email is a label. The <code>sub</code> is the person.</p>
         </div>
       </div>
     </li>
@@ -482,21 +396,21 @@ const userId = ticket.getPayload().sub;</code></pre>
 
   <section class="catch">
     <div class="wrap">
-      <h2>Close the card once, and it stops showing up.</h2>
-      <p>Without FedCM, each close hides it longer: two hours, then one day, one week and four weeks, until a successful sign-in resets the count. With FedCM the browser sets its own cooldown and no longer tells the page why the card is missing (<code>getNotDisplayedReason()</code> is gone); in Chrome, reset it from the lock icon with <strong>Reset Permission</strong>.</p>
+      <h2>Close the card a few times, and it stops showing for weeks.</h2>
+      <p>Without FedCM, each close in a row pauses it longer: 2 hours, 1 day, 1 week, then 4 weeks, until a sign-in succeeds. In Chrome the browser sets the pause, and you reset it from the lock icon in the address bar with <strong>Reset Permission</strong>.</p>
     </div>
   </section>
 
   <section class="wrap further">
     <h2>Push further</h2>
-    <details><summary>What happens when a user signs out of my site?</summary><p>With <code>auto_select</code> on, the next page with One Tap signs them straight back in. Call <code>google.accounts.id.disableAutoSelect()</code> on sign-out; it blocks automatic sign-in for one day and does not sign them out of Google.</p></details>
-    <details><summary>Does it work in Safari and Firefox?</summary><p>Not as the standard card. In Safari, Firefox and Chrome on iOS (Google calls them ITP browsers), <code>itp_support: true</code> shows a welcome page that opens a pop-up, and automatic sign-in is not supported.</p></details>
-    <details><summary>Can I call Google APIs with this note?</summary><p>No. Sign-in returns only ID tokens. An access token comes from Google's separate authorization API, which you call later.</p></details>
+    <details><summary>What do Safari and Firefox users see?</summary><p>Google calls them ITP browsers, with Chrome on iOS, and the standard card does not work there. With <code>itp_support: true</code> they get a welcome page, then a pop-up that works much like the card.</p></details>
+    <details><summary>Can it sign people in with no tap at all?</summary><p>Yes: <code>auto_select: true</code> returns a token without a tap when only one Google session has approved your site before. Call <code>google.accounts.id.disableAutoSelect()</code> on sign-out, or the user lands straight back in.</p></details>
+    <details><summary>Can I call Google APIs with this token?</summary><p>No. This sign-in API returns only ID tokens. Reading a user's Drive or Calendar needs an access token from Google's separate authorization API.</p></details>
   </section>
 
   <footer class="wrap colophon">
-    <p><strong>Simplified on purpose.</strong> Left out the button flow, redirect mode, the optional <code>nonce</code>, the older page-placed prompt from before FedCM, and the browser's separate FedCM requests.</p>
-    <p>Sources: Google's <a href="https://developers.google.com/identity/gsi/web/guides/overview">Sign in with Google for Web guides</a> and its <a href="https://developers.google.com/identity/gsi/web/guides/fedcm-migration">FedCM migration guide</a>.</p>
+    <p><strong>Simplified on purpose.</strong> One browser and one Google account; the account chooser, the first-time consent page and the pop-up fallbacks are left out.</p>
+    <p>Sources: Google Identity docs: <a href="https://developers.google.com/identity/gsi/web/guides/overview">overview</a>, <a href="https://developers.google.com/identity/gsi/web/guides/display-google-one-tap">display One Tap</a>, <a href="https://developers.google.com/identity/gsi/web/guides/features">features and cooldown</a>, <a href="https://developers.google.com/identity/gsi/web/guides/fedcm-migration">FedCM migration</a>, <a href="https://developers.google.com/identity/gsi/web/guides/verify-google-id-token">verify the ID token</a> and the <a href="https://developers.google.com/identity/gsi/web/reference/js-reference">JavaScript reference</a>.</p>
   </footer>
 </main>
 </body>

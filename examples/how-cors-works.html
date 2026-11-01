@@ -3,149 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Who Reads the Reply</title>
+<title>The Browser's Guest List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-/* Layout: a printed manual marked up in red pen. The hero shows the whole cast at a glance; each zoom draws one part with the same characters, then says it twice: in plain words and under the hood. */
-:root{
-  --paper:oklch(98.4% .005 250); --paper-2:oklch(95.4% .007 250); --ink:oklch(22% .03 258); --ink-2:oklch(38% .025 258);
-  --muted:oklch(47% .02 258); --rule:oklch(87% .009 250); --accent:oklch(54% .19 33);
-  --band:var(--ink); --band-ink:var(--paper); --band-chip:oklch(31% .03 258);
-  --c-blue:oklch(86% .07 240); --c-green:oklch(88% .08 150); --c-yellow:oklch(92% .1 95); --c-pink:oklch(87% .07 10); --c-gray:oklch(92% .01 250);
-  --serif:"Newsreader",ui-serif,Georgia,serif; --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  --space-xs:8px; --space-sm:12px; --space-md:16px; --space-lg:24px; --space-xl:40px; --space-2xl:64px;
-  --space-section:clamp(4rem,2rem + 8vw,9rem); --gutter:clamp(1rem,4vw,4rem); --hang:clamp(2.25rem,1rem + 5vw,6rem);
-  --text-sm:.9375rem; --text-md:1rem; --text-plain:clamp(1.125rem,1rem + .55vw,1.375rem); --text-lead:clamp(1.25rem,1rem + 1vw,1.625rem);
-  --text-section:clamp(1.625rem,1.1rem + 1.9vw,2.625rem); --text-statement:clamp(2rem,1.1rem + 3.2vw,3.5rem); --text-display:clamp(2.375rem,1.2rem + 4.2vw,4.25rem);
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
-  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
-  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
-  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
-  color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --paper:oklch(17.5% .014 258); --paper-2:oklch(22.5% .016 258); --ink:oklch(93% .008 250); --ink-2:oklch(80% .012 250);
-  --muted:oklch(71% .015 255); --rule:oklch(33% .016 258); --accent:oklch(71% .16 37);
-  --band:oklch(25% .03 40); --band-ink:oklch(93% .008 250); --band-chip:oklch(32% .035 40);
-  --c-blue:oklch(40% .07 240); --c-green:oklch(40% .07 150); --c-yellow:oklch(46% .08 90); --c-pink:oklch(40% .07 10); --c-gray:oklch(30% .015 258);
-  color-scheme:dark;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0}
-html,body{overflow-x:clip}
-body{background:var(--paper);color:var(--ink);font:400 var(--text-plain)/1.6 var(--serif);-webkit-font-smoothing:antialiased}
-.wrap{max-width:75rem;margin-inline:auto;padding-inline:var(--gutter);display:grid;grid-template-columns:var(--hang) minmax(0,1fr)}
-.wrap>*{grid-column:1/-1;min-width:0}
-@media (min-width:48rem){.wrap>*{grid-column:2}}
-h1,h2{font-family:var(--serif);font-weight:600;text-wrap:balance;overflow-wrap:break-word}
-h1{font-size:var(--text-display);line-height:1.04;letter-spacing:-.022em;max-width:22ch}
-h2{font-size:var(--text-section);line-height:1.12;letter-spacing:-.015em;max-width:30ch}
-p{text-wrap:pretty;max-width:60ch}
-strong{font-weight:600}
-a{color:inherit;text-decoration-color:var(--accent);text-decoration-thickness:1.5px;text-underline-offset:.2em}
-a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-code{font:400 .86em/1 var(--mono);background:var(--paper-2);padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}
-pre{font:400 var(--text-sm)/1.6 var(--mono);background:var(--paper-2);padding:var(--space-md);border-radius:3px;overflow-x:auto;max-width:60ch}
-pre code{font-size:inherit;background:none;padding:0}
-
-.hero{padding-block:var(--space-section) var(--space-2xl)}
-.lede{font-size:var(--text-lead);line-height:1.45;color:var(--muted);max-width:44ch;margin-top:var(--space-lg)}
-
-/* The glance: the whole cast in a row on wide screens, a column on phones. */
-.cast{list-style:none;padding:0;margin-top:var(--space-2xl);display:flex;flex-wrap:wrap;gap:var(--space-lg) var(--space-xl)}
-.cast li{position:relative;display:grid;justify-items:center;align-content:start;gap:4px;width:7.5rem;text-align:center;font:400 var(--text-sm)/1.3 var(--sans)}
-.cast li+li::before{content:"";position:absolute;left:calc(var(--space-xl) * -1 + 6px);top:1.9rem;width:calc(var(--space-xl) - 12px);height:12px;background:var(--ink-2);
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat;
-          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 12'%3E%3Cpath d='M1 6.5c8-1.5 16 .5 25-.5M20 1.5l6 4.5-6 4.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat}
-.cast .ico{width:4.5rem;height:4.5rem;overflow:visible}
-.cast b{font-weight:600}
-.cast code{font-size:.8em}
-.cast li.hl::after{content:"";position:absolute;inset:-.7rem -.5rem;border:2.5px solid var(--accent);border-radius:46% 54% 42% 58%/56% 44% 56% 44%;transform:rotate(-4deg);pointer-events:none}
-@media (max-width:40rem){
-  .cast{flex-direction:column;gap:var(--space-xl)}
-  .cast li{width:auto;grid-template-columns:4rem minmax(0,1fr);justify-items:start;align-items:center;text-align:left;column-gap:var(--space-md)}
-  .cast li>:not(.ico){grid-column:2}
-  .cast li .ico{grid-row:1/span 2;width:4rem;height:4rem}
-  .cast li+li::before{left:1.4rem;top:calc(var(--space-xl) * -1 + 4px);width:calc(var(--space-xl) - 8px);height:12px;transform-origin:left center;transform:rotate(90deg) translateY(-50%)}
-  .cast li.hl::after{inset:-.6rem -.6rem;right:auto;width:min(100%,18rem)}
-}
-.caption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted);margin-top:var(--space-lg)}
-.glance-words{margin-top:var(--space-md)}
-
-/* Zooms: a numbered list. The number hangs left of the claim; the drawing and the words sit side by side on wide screens. */
-.zooms{list-style:none;padding:0;counter-reset:zoom}
-.zoom{counter-increment:zoom;row-gap:var(--space-lg);padding-block:0 var(--space-section)}
-.zoom::before{content:"";grid-column:1/-1;border-top:2px solid var(--ink);margin-bottom:var(--space-xl)}
-.zoom h2{grid-column:2;position:relative}
-.zoom h2::before{content:counter(zoom);position:absolute;right:100%;padding-right:var(--space-sm);color:var(--accent);font-variant-numeric:lining-nums tabular-nums}
-@media (min-width:48rem){.zoom h2::before{padding-right:var(--space-lg)}}
-.zoom-body{display:grid;gap:var(--space-lg);align-items:start}
-@media (min-width:64rem){.zoom-body{grid-template-columns:minmax(0,31rem) minmax(0,1fr);gap:var(--space-2xl)}}
-.words{display:grid;gap:var(--space-md)}
-.hood{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);border-left:1px solid var(--rule);padding-left:var(--space-md)}
-.hood strong{color:var(--ink)}
-.hood ol{padding-left:1.2em;display:grid;gap:4px}
-
-/* Drawings: 400 units wide, so a phone shows them at about 80% with readable labels. */
-.drawing{display:grid;gap:var(--space-xs)}
-.drawing svg{display:block;width:100%;max-width:31rem;height:auto;overflow:visible}
-.drawing figcaption{font:400 var(--text-sm)/1.5 var(--sans);color:var(--muted)}
-.drawing :is(rect,path,line,ellipse,circle,polygon,use),.cast .ico use{filter:url(#rough)}
-.o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.dot{fill:var(--ink)}
-.wire{stroke:var(--ink-2);stroke-width:2;fill:none;stroke-linecap:round}
-.hot{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round}
-.cut{stroke-dasharray:6 6}
-.life{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 6;stroke-linecap:round}
-.pen{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round}
-.box{fill:var(--paper);stroke:var(--ink);stroke-width:2}
-.n{font:600 15px var(--sans);fill:var(--ink);text-anchor:middle}
-.t{font:400 13px var(--mono);fill:var(--muted);text-anchor:middle}
-.l{font:400 14px var(--sans);fill:var(--ink-2);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
-.l.h{fill:var(--accent);font-weight:600}
-.num-bg{fill:var(--ink)}
-.num{font:600 11px var(--mono);fill:var(--paper);text-anchor:middle}
-.tip{fill:var(--ink-2)}
-.tip-hot{fill:var(--accent)}
-
-/* The catch: the one change of paper on the page. */
-.catch{background:var(--band);color:var(--band-ink);padding-block:var(--space-section)}
-.catch h2{font-size:var(--text-statement);line-height:1.06;max-width:20ch}
-.catch p{max-width:58ch;margin-top:var(--space-lg)}
-.catch code{background:var(--band-chip)}
-
-.further{padding-block:var(--space-section) 0}
-.further h2{margin-bottom:var(--space-lg)}
-.further details{border-top:1px solid var(--rule);padding-block:var(--space-md);max-width:48rem}
-.further details:last-child{border-bottom:1px solid var(--rule)}
-.further summary{cursor:pointer;list-style:none;display:grid;grid-template-columns:1.5rem minmax(0,1fr);font:600 var(--text-md)/1.5 var(--sans)}
-.further summary::-webkit-details-marker{display:none}
-.further summary::before{content:"+";font-family:var(--mono);color:var(--accent)}
-.further details[open] summary::before{content:"−"}
-.further details p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2);margin:var(--space-xs) 0 0 1.5rem}
-
-/* Decision pages only. */
-.compare{display:grid;gap:var(--space-xl)}
-.compare>*{border-top:1px solid var(--rule);padding-top:var(--space-md)}
-.compare>.pick{border-top:3px solid var(--accent)}
-.compare h3{font:600 var(--text-md)/1.4 var(--sans);margin-bottom:var(--space-xs)}
-.compare p{font:400 var(--text-md)/1.6 var(--sans);color:var(--ink-2)}
-@media (min-width:48rem){.compare{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.table{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font:400 var(--text-md)/1.5 var(--sans)}
-th,td{text-align:left;vertical-align:top;padding:var(--space-sm) var(--space-md) var(--space-sm) 0;border-bottom:1px solid var(--rule)}
-th{font-weight:600;color:var(--muted)}
-
-.colophon{padding-block:var(--space-2xl) var(--space-section);font:400 var(--text-sm)/1.6 var(--sans);color:var(--muted)}
-.colophon p+p{margin-top:var(--space-xs)}
-.colophon strong{color:var(--ink)}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
-
-/* kiss skin: post office */
 /* Layout: a post-office story told top to bottom. The hero names the route as pills; each zoom is a stamped step, picture card left, few words right. */
 :root{
   --bg:#F2F5F9; --paper:#FFFFFF; --paper-2:#E8EEF6; --ink:#15223A; --ink-2:#33415C; --muted:#586982; --rule:#CAD4E2;
@@ -193,31 +55,34 @@ pre code{background:none;padding:0;font-size:inherit}
 /* The glance: the route as pills, a character in each; the deciding stop is stamped. */
 .cast{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:12px 34px;align-items:center}
 .cast li{position:relative;display:inline-flex;align-items:center;gap:8px;width:auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:999px;padding:5px 14px 5px 6px;font:400 14px/1.25 var(--body);text-align:left;justify-items:normal}
-.cast li+li::before{content:"→";position:absolute;left:-25px;top:50%;transform:translateY(-50%);width:auto;height:auto;background:none;-webkit-mask:none;mask:none;color:var(--muted);font:400 16px/1 var(--mono)}
+.cast li+li::before{content:none}
+.cast li:not(:last-child)::after{content:"→";position:absolute;right:-25px;left:auto;top:50%;bottom:auto;inset:auto -25px auto auto;width:auto;height:auto;border:0;border-radius:0;transform:translateY(-50%);background:none;color:var(--muted);font:400 16px/1 var(--mono);pointer-events:none}
 .cast .ico,.cast li .ico{width:30px;height:30px;flex:none;overflow:visible}
 .cast b{font-weight:700}
 .cast code{background:none;padding:0;color:var(--muted);font-size:12px}
 .cast li.hl{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--paper))}
-.cast li.hl::after{content:none}
+.cast li.hl:last-child::after{content:none}
 @media (max-width:40rem){
   .cast{flex-direction:column;align-items:flex-start;gap:26px}
   .cast li{display:inline-flex;grid-template-columns:none;width:auto}
   .cast li .ico{grid-row:auto;width:30px;height:30px}
   .cast li>:not(.ico){grid-column:auto}
-  .cast li+li::before{content:"↓";left:20px;top:-22px;transform:none;width:auto;height:auto}
+  .cast li:not(:last-child)::after{content:"↓";inset:auto auto -24px 20px;transform:none}
 }
 .caption{font:400 14px/1.5 var(--body);color:var(--muted);margin:0}
 .glance-words{margin:0}
 
-/* Zooms: stamped steps, picture card left, words right; dashed seams between. */
+/* Zooms: picture card left; stamp, claim and words right; dashed seams between. */
 .zooms{list-style:none;padding:0;margin:0;display:grid;gap:48px;counter-reset:zoom}
-.zoom{counter-increment:zoom;display:grid;gap:18px;padding:0}
+.zoom{counter-increment:zoom;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-areas:"pic head" "pic words";column-gap:40px;row-gap:14px;align-content:center;padding:0}
 .zoom::before{content:none}
 .zoom+.zoom{border-top:1.5px dashed var(--rule);padding-top:48px}
-.zoom h2{display:flex;align-items:center;gap:14px;position:static;grid-column:auto}
-.zoom h2::before{content:counter(zoom);position:static;right:auto;top:auto;flex:none;width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent);transform:rotate(-3deg)}
-.zoom-body{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:36px;align-items:center}
-@media (max-width:760px){.zoom-body{grid-template-columns:minmax(0,1fr);gap:20px}}
+.zoom-body{display:contents}
+.zoom h2{grid-area:head;align-self:end;position:relative;display:block;padding:8px 0 8px 66px;min-height:52px}
+.zoom h2::before{content:counter(zoom);position:absolute;left:0;top:50%;right:auto;transform:translateY(-50%);width:52px;height:52px;padding:0;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:6px;font:800 24px/1 var(--display);color:var(--ink);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.zoom .drawing{grid-area:pic;align-self:center}
+.zoom .words{grid-area:words;align-self:start}
+@media (max-width:760px){.zoom{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "head" "words";row-gap:18px}}
 .drawing{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;padding:14px;display:grid;gap:8px;margin:0}
 .drawing svg{display:block;width:100%;max-width:none;height:auto;overflow:visible}
 .drawing figcaption{font:400 13.5px/1.45 var(--body);color:var(--muted)}
@@ -235,6 +100,14 @@ pre code{background:none;padding:0;font-size:inherit}
 .pill.no{background:color-mix(in srgb,var(--no) 14%,transparent);color:var(--no)}
 .pill.new{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
 
+/* Scene paint: flat fills and thick ink, from the tokens. */
+.s-ink{stroke:var(--ink)} .s-muted{stroke:var(--muted)} .s-line{stroke:var(--rule)}
+.f-surface{fill:var(--paper)} .f-bg{fill:var(--bg)} .f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)} .f-line{fill:var(--rule)}
+.f-accent{fill:var(--accent)} .f-yes{fill:var(--yes)} .f-no{fill:var(--no)} .f-blue{fill:var(--blue)}
+.svg-t{font:400 12px var(--mono);fill:var(--ink)}
+.svg-tm{font:400 11px var(--mono);fill:var(--muted)}
+.svg-tb{font:700 15px var(--display);fill:var(--ink)}
+.svg-ta{font:700 14px var(--display);fill:var(--accent-ink)}
 /* SVG paint comes from tokens, so dark mode follows. */
 .o{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .dot{fill:var(--ink)}
@@ -296,7 +169,6 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
 <!-- The cast. Actors have faces; objects do not. Recolor one use with style="--fill:var(--c-pink)". If the cast lacks something, draw it the same way: 64×64, class "o" outline, one crayon fill, a face only for an actor. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <filter id="rough" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1400" height="1400"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <marker id="arrow-hl" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="var(--hot)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
@@ -304,7 +176,8 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <symbol id="ico-server" viewBox="0 0 64 64"><rect class="o" x="14" y="5" width="36" height="52" rx="6" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 15h14M21 22h14M21 59v2M43 59v2"/><circle class="dot" cx="42" cy="15" r="2"/><circle class="dot" cx="26" cy="37" r="2.4"/><circle class="dot" cx="38" cy="37" r="2.4"/><path class="o" d="M27 45q5 4 10 0"/></symbol>
   <symbol id="ico-person" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-pink))"/><circle class="o" cx="32" cy="21" r="12" style="fill:var(--fill,var(--c-pink))"/><circle class="dot" cx="27.5" cy="20" r="1.9"/><circle class="dot" cx="36.5" cy="20" r="1.9"/><path class="o" d="M28 26q4 3.5 8 0"/></symbol>
   <symbol id="ico-phone" viewBox="0 0 64 64"><rect class="o" x="17" y="4" width="30" height="56" rx="7" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M28 10h8"/><circle class="dot" cx="32" cy="53" r="2.2"/><circle class="dot" cx="26.5" cy="28" r="2.3"/><circle class="dot" cx="37.5" cy="28" r="2.3"/><path class="o" d="M28 35q4 3.5 8 0"/></symbol>
-  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--accent)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-robot" viewBox="0 0 64 64"><path class="o" d="M32 17V9"/><circle class="o" cx="32" cy="7" r="3" style="fill:var(--no)"/><rect class="o" x="11" y="17" width="42" height="36" rx="9" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M7 30v10M57 30v10"/><circle class="dot" cx="24" cy="32" r="3.4"/><circle class="dot" cx="40" cy="32" r="3.4"/><path class="o" d="M25 43h14"/></symbol>
+  <symbol id="ico-laptop" viewBox="0 0 64 64"><rect class="o" x="12" y="12" width="40" height="30" rx="4" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M5 50h54l-5-8H10z" style="fill:var(--fill,var(--c-gray))"/><circle class="dot" cx="26" cy="25" r="2.3"/><circle class="dot" cx="38" cy="25" r="2.3"/><path class="o" d="M27 32q5 3.5 10 0"/></symbol>
   <symbol id="ico-db" viewBox="0 0 64 64"><path class="o" d="M12 16v32c0 4.4 9 8 20 8s20-3.6 20-8V16" style="fill:var(--fill,var(--c-yellow))"/><ellipse class="o" cx="32" cy="16" rx="20" ry="8" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M12 32c0 4.4 9 8 20 8s20-3.6 20-8"/></symbol>
   <symbol id="ico-letter" viewBox="0 0 64 64"><rect class="o" x="6" y="15" width="52" height="34" rx="4" style="fill:var(--fill,var(--paper))"/><path class="o" d="M7 18l25 18 25-18"/></symbol>
   <symbol id="ico-key" viewBox="0 0 64 64"><circle class="o" cx="20" cy="32" r="12" style="fill:var(--fill,var(--c-yellow))"/><circle class="o" cx="20" cy="32" r="4" style="fill:var(--paper)"/><path class="o" d="M32 32h25M50 32v9M43 32v6"/></symbol>
@@ -318,190 +191,192 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <symbol id="ico-bolt" viewBox="0 0 64 64"><path class="o" d="M37 4L14 36h15l-4 24 25-34H35z" style="fill:var(--fill,var(--c-yellow))"/></symbol>
   <symbol id="ico-stop" viewBox="0 0 64 64"><path class="o" d="M22 6h20l14 14v20L42 54H22L8 40V20z" style="fill:var(--fill,var(--c-pink))"/><path class="o" d="M24 22l16 16M40 22L24 38"/></symbol>
   <symbol id="ico-check" viewBox="0 0 64 64"><circle class="o" cx="32" cy="32" r="24" style="fill:var(--fill,var(--c-green))"/><path class="o" d="M21 33l8 8 15-17"/></symbol>
+  <!-- Scene props: the metaphor's objects. -->
+  <symbol id="ico-cabinet" viewBox="0 0 64 64"><rect class="o" x="12" y="5" width="40" height="54" rx="4" style="fill:var(--fill,var(--c-gray))"/><rect class="o" x="17" y="10" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="26" width="30" height="13" rx="2" style="fill:var(--paper)"/><rect class="o" x="17" y="42" width="30" height="13" rx="2" style="fill:var(--paper)"/><path class="o" d="M28 16.5h8M28 32.5h8M28 48.5h8"/></symbol>
+  <symbol id="ico-book" viewBox="0 0 64 64"><path class="o" d="M32 15c-6-4-14-5-24-4v40c10-1 18 0 24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M32 15c6-4 14-5 24-4v40c-10-1-18 0-24 4z" style="fill:var(--fill,var(--paper))"/><path class="o" d="M14 23c5-.5 9 0 13 1.5M14 31c5-.5 9 0 13 1.5M14 39c5-.5 9 0 13 1.5M37 24.5c4-1.5 8-2 13-1.5M37 32.5c4-1.5 8-2 13-1.5"/></symbol>
+  <symbol id="ico-bell" viewBox="0 0 64 64"><path class="o" d="M18 44c3-4 4-8 4-15a10 10 0 0 1 20 0c0 7 1 11 4 15z" style="fill:var(--fill,var(--c-yellow))"/><path class="o" d="M14 44h36M28 50a4 4 0 0 0 8 0M32 9v4M8 22l5 3M56 22l-5 3"/></symbol>
+  <symbol id="ico-bin" viewBox="0 0 64 64"><path class="o" d="M16 20h32l-3 36H19z" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M11 20h42M26 20v-6h12v6M26 28v20M32 28v20M38 28v20"/></symbol>
+  <symbol id="ico-door" viewBox="0 0 64 64"><path class="o" d="M16 58V12a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v46z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M10 58h44"/><circle class="dot" cx="41" cy="35" r="2.6"/></symbol>
+  <symbol id="ico-mailbox" viewBox="0 0 64 64"><path class="o" d="M34 42v17"/><path class="o" d="M45 28V7h9v7h-9" style="fill:var(--no)"/><path class="o" d="M6 42V27a11 11 0 0 1 11-11h30a11 11 0 0 1 11 11v15z" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M17 16a11 11 0 0 1 11 11v15"/></symbol>
+  <symbol id="ico-search" viewBox="0 0 64 64"><circle class="o" cx="27" cy="27" r="16" style="fill:var(--fill,var(--paper))"/><path class="o" d="M39 39l15 15" style="stroke-width:5"/><path class="o" d="M19 23a9 9 0 0 1 7-6"/></symbol>
+  <symbol id="ico-switch-on" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-green))"/><circle class="o" cx="45" cy="32" r="9" style="fill:var(--paper)"/></symbol>
+  <symbol id="ico-switch-off" viewBox="0 0 64 64"><rect class="o" x="6" y="19" width="52" height="26" rx="13" style="fill:var(--fill,var(--c-gray))"/><circle class="o" cx="19" cy="32" r="9" style="fill:var(--paper)"/></symbol>
+  <symbol id="ico-doorman" viewBox="0 0 64 64"><path class="o" d="M13 59c0-11 8.5-18 19-18s19 7 19 18z" style="fill:var(--fill,var(--c-gray))"/><circle class="dot" cx="32" cy="48" r="1.8"/><circle class="dot" cx="32" cy="54" r="1.8"/><circle class="o" cx="32" cy="24" r="11" style="fill:var(--fill,var(--c-gray))"/><path class="o" d="M21 15c0-6 5-9 11-9s11 3 11 9z" style="fill:var(--blue)"/><path class="o" d="M17 15h30"/><circle class="dot" cx="27.5" cy="23.5" r="1.9"/><circle class="dot" cx="36.5" cy="23.5" r="1.9"/><path class="o" d="M28 29q4 3.5 8 0"/></symbol>
+  <symbol id="ico-badge" viewBox="0 0 64 64"><rect class="o" x="8" y="16" width="48" height="40" rx="6" style="fill:var(--fill,var(--c-blue))"/><path class="o" d="M8 28h48M17 39h30M17 47h18"/><rect class="o" x="25" y="8" width="14" height="12" rx="3" style="fill:var(--c-gray)"/></symbol>
 </svg>
-
 
 <main>
   <header class="wrap hero">
-    <h1>The browser hides the reply unless the server lists your origin.</h1>
-    <p class="lede">Your page on <code>app.example.com</code> calls <code>fetch('https://api.example.com/orders')</code>. The server answers, and then the browser reads one reply header to decide if your code may see the data.</p>
+    <h1>The API writes a guest list, and the browser checks your name on it.</h1>
+    <p class="lede">Your page on <code>https://app.example.com</code> calls <code>fetch()</code> on <code>https://api.example.com/orders</code>. The reply arrives, but the browser hands it to your code <b>only if the reply names your origin</b>.</p>
     <ol class="cast" aria-label="The whole flow at a glance">
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-robot"/></svg><b>Your script</b><code>app.example.com</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-browser"/></svg><b>Doorman</b><code>browser</code></li>
-      <li><svg class="ico" aria-hidden="true"><use href="#ico-letter"/></svg><b>Call ahead</b><code>OPTIONS</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-browser"/></svg><b>Your page</b><code>app.example.com</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-badge"/></svg><b>Name badge</b><code>Origin</code></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#ico-door" style="--fill:var(--c-green)"/></svg><b>Knock first</b><code>OPTIONS</code></li>
       <li><svg class="ico" aria-hidden="true"><use href="#ico-server"/></svg><b>The API</b><code>api.example.com</code></li>
-      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-list"/></svg><b>Guest list</b><code>ACAO header</code></li>
+      <li class="hl"><svg class="ico" aria-hidden="true"><use href="#ico-list" style="--fill:var(--accent)"/></svg><b>Guest list</b><code>Access-Control-Allow-Origin</code></li>
     </ol>
-    <p class="caption">Marked: the guest list, because one reply header decides whether your script sees the data. The drawings below zoom into each part.</p>
-    <p class="glance-words"><strong>In plain words.</strong> Your script asks another origin for data. The browser acts as a <strong>doorman</strong>: it lets the request out, then reads the reply first. The server writes a guest list on the reply (<code>Access-Control-Allow-Origin</code>). If your origin is on it, your script gets the data. If not, the browser drops it.</p>
+    <p class="caption">Marked: the guest list check, where the browser decides if your code may read the reply. The drawings below zoom into each part.</p>
+    <p class="glance-words"><strong>In plain words.</strong> Think of the browser as a <strong>doorman</strong> between your page and every other site. It pins your page's name on each request and knocks first when a request looks risky. When the reply comes back, it reads the API's guest list. Your name is on it: your code gets the reply. It is not: your code gets an error.</p>
   </header>
 
   <ol class="zooms">
     <li class="wrap zoom">
-      <h2>An origin is scheme, host and port, all three.</h2>
+      <h2>The browser pins your origin on the request as a name badge.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 330" role="img" aria-label="The origin https://app.example.com is split into three parts: scheme, host and port. Four URLs are compared with it: the same address with a different path is the same origin, while a different scheme, a different subdomain and a different port are each cross-origin.">
-            <use href="#ico-robot" x="4" y="0" width="44" height="44"/>
-            <text class="n" x="58" y="28" style="text-anchor:start">Your script's origin</text>
-            <rect class="box" x="12" y="56" width="96" height="34" rx="5"/><text class="t" x="60" y="78">https://</text>
-            <rect class="box" x="116" y="56" width="166" height="34" rx="5"/><text class="t" x="199" y="78">app.example.com</text>
-            <rect class="box" x="290" y="56" width="98" height="34" rx="5"/><text class="t" x="339" y="78">:443</text>
-            <text class="l" x="60" y="110">scheme</text><text class="l" x="199" y="110">host</text><text class="l" x="339" y="110">port</text>
-
-            <circle class="num-bg" cx="14" cy="152" r="9"/><text class="num" x="14" y="156">1</text>
-            <use href="#ico-check" x="30" y="138" width="28" height="28"/>
-            <text class="t" x="68" y="150" style="text-anchor:start">https://app.example.com/orders</text>
-            <text class="l" x="68" y="169" style="text-anchor:start">same origin: the path does not count</text>
-
-            <circle class="num-bg" cx="14" cy="202" r="9"/><text class="num" x="14" y="206">2</text>
-            <use href="#ico-stop" x="30" y="188" width="28" height="28"/>
-            <text class="t" x="68" y="200" style="text-anchor:start">http://app.example.com</text>
-            <text class="l" x="68" y="219" style="text-anchor:start">cross-origin: the scheme differs</text>
-
-            <circle class="num-bg" cx="14" cy="252" r="9"/><text class="num" x="14" y="256">3</text>
-            <use href="#ico-stop" x="30" y="238" width="28" height="28"/>
-            <text class="t" x="68" y="250" style="text-anchor:start">https://<tspan style="fill:var(--accent)">api</tspan>.example.com</text>
-            <ellipse class="pen" cx="142" cy="245" rx="19" ry="13" transform="rotate(-6 142 245)"/>
-            <text class="l" x="68" y="269" style="text-anchor:start">cross-origin: the host differs</text>
-
-            <circle class="num-bg" cx="14" cy="302" r="9"/><text class="num" x="14" y="306">4</text>
-            <use href="#ico-stop" x="30" y="288" width="28" height="28"/>
-            <text class="t" x="68" y="300" style="text-anchor:start">https://app.example.com:8080</text>
-            <text class="l" x="68" y="319" style="text-anchor:start">cross-origin: the port differs</text>
+          <svg viewBox="0 0 340 192" role="img" aria-label="Your page, app.example.com, calls fetch and sends GET /orders along a solid arrow to the green API server, api.example.com. A big yellow name badge titled Origin is pinned on the request. It reads https://, app.example.com and :443.">
+            <use href="#ico-browser" x="18" y="58" width="84" height="84"/>
+            <path d="M98 100 H250" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <use href="#ico-server" x="238" y="58" width="84" height="84"/>
+            <rect x="108" y="46" width="124" height="108" rx="10" class="f-accent s-ink" stroke-width="3"/>
+            <rect x="156" y="34" width="28" height="22" rx="4" class="f-line s-ink" stroke-width="2.5"/>
+            <rect x="163" y="40" width="14" height="5" rx="2.5" class="f-surface"/>
+            <text x="170" y="80" text-anchor="middle" class="svg-ta">Origin</text>
+            <path d="M120 90 H220" fill="none" class="s-ink" stroke-width="2"/>
+            <text x="170" y="110" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink)">https://</text>
+            <text x="170" y="127" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-weight:600">app.example.com</text>
+            <text x="170" y="144" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink)">:443</text>
+            <text x="60" y="166" text-anchor="middle" class="svg-t">fetch()</text>
+            <text x="60" y="182" text-anchor="middle" class="svg-tm">app.example.com</text>
+            <text x="280" y="166" text-anchor="middle" class="svg-t">GET /orders</text>
+            <text x="280" y="182" text-anchor="middle" class="svg-tm">api.example.com</text>
           </svg>
-          <figcaption>Highlighted: row 3, because a sibling subdomain is a stranger too, and that surprises people most.</figcaption>
+          <figcaption>Yellow: the <code>Origin</code> badge, because the browser writes it and your code cannot change it.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> Your page's home address (<code>origin</code>) has three parts: the protocol (<code>scheme</code>), the machine name (<code>host</code>) and the <code>port</code>. Change any one and the browser treats the other side as a <strong>stranger</strong>. The path never counts.</p>
-          <p class="hood"><strong>Under the hood.</strong> Row 1 matches, because the path is not part of the origin. Rows 2–4 each change one part, so a <code>fetch()</code> to them is cross-origin. <code>https://</code> implies port <code>443</code>, so the <code>8080</code> in row 4 does not match.</p>
+          <p><strong>In plain words.</strong> Your page's <strong>origin</strong> is where it came from: scheme, host and port. <code>app.example.com</code> and <code>api.example.com</code> differ in host, so they are two origins. That makes this call cross-origin.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> Two URLs share an origin only when scheme, host and port all match. On this call the browser adds <code>Origin: https://app.example.com</code>. <code>Origin</code> is a forbidden request header, so <code>fetch()</code> cannot set or fake it.</p></div>
+          <div class="tags"><span class="tag">name badge = Origin header</span></div>
         </div>
       </div>
     </li>
 
     <li class="wrap zoom">
-      <h2>The browser sends the request, then checks the reply.</h2>
+      <h2>Before a risky request, the browser knocks first.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 386" role="img" aria-label="Sequence: your script calls fetch; the browser sends GET /orders to the API with an Origin header; the API replies 200 OK with an Access-Control-Allow-Origin header; the browser compares the two and hands the reply to the script only on a match, otherwise fetch fails with a TypeError.">
-            <use href="#ico-robot" x="22" y="4" width="52" height="52"/>
-            <use href="#ico-browser" x="134" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
-            <text class="n" x="48" y="74">Your script</text><text class="t" x="48" y="90">fetch()</text>
-            <text class="n" x="160" y="74">Doorman</text><text class="t" x="160" y="90">browser</text>
-            <text class="n" x="340" y="74">The API</text><text class="t" x="340" y="90">api.example.com</text>
-            <line class="life" x1="48" y1="100" x2="48" y2="372"/><line class="life" x1="160" y1="100" x2="160" y2="372"/><line class="life" x1="340" y1="100" x2="340" y2="372"/>
-
-            <circle class="num-bg" cx="16" cy="126" r="9"/><text class="num" x="16" y="130">1</text>
-            <line class="wire" x1="50" y1="126" x2="156" y2="126" marker-end="url(#arrow)"/>
-            <text class="t" x="104" y="117">fetch(url)</text>
-
-            <circle class="num-bg" cx="16" cy="178" r="9"/><text class="num" x="16" y="182">2</text>
-            <line class="wire" x1="162" y1="178" x2="336" y2="178" marker-end="url(#arrow)"/>
-            <text class="l" x="250" y="170">GET /orders</text>
-            <text class="t" x="250" y="197" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Origin: https://app.example.com</text>
-
-            <circle class="num-bg" cx="16" cy="246" r="9"/><text class="num" x="16" y="250">3</text>
-            <line class="wire" x1="338" y1="246" x2="164" y2="246" marker-end="url(#arrow)"/>
-            <use href="#ico-list" x="272" y="229" width="34" height="34"/>
-            <text class="l" x="210" y="238">200 OK</text>
-            <text class="t" x="250" y="280" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Access-Control-Allow-Origin:</text>
-            <text class="t" x="250" y="297" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">https://app.example.com</text>
-
-            <circle class="num-bg" cx="16" cy="330" r="9"/><text class="num" x="16" y="334">4</text>
-            <line class="hot" x1="158" y1="330" x2="52" y2="330" marker-end="url(#arrow-hl)"/>
-            <text class="l h" x="104" y="321">match: hand over</text>
-            <ellipse class="pen" cx="104" cy="318" rx="64" ry="18" transform="rotate(-4 104 318)"/>
-            <line class="wire cut" x1="158" y1="356" x2="52" y2="356" marker-end="url(#arrow)"/>
-            <text class="l" x="104" y="377">no match: TypeError</text>
+          <svg viewBox="0 0 340 212" role="img" aria-label="The doorman, the browser, holds a yellow card that reads OPTIONS /orders, PUT? and authorization?. A solid arrow knocks the card on the green door of api.example.com. Below, an envelope marked PUT /orders waits.">
+            <use href="#ico-doorman" x="4" y="62" width="84" height="84"/>
+            <text x="46" y="164" text-anchor="middle" class="svg-tm">browser</text>
+            <path d="M70 138 C78 154, 82 168, 88 176" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <g transform="translate(90 166)">
+              <rect width="52" height="32" rx="4" class="f-surface s-ink" stroke-width="2.5"/>
+              <path d="M3 4 L26 19 L49 4" fill="none" class="s-ink" stroke-width="2" stroke-linejoin="round"/>
+            </g>
+            <text x="148" y="180" text-anchor="start" class="svg-t">PUT /orders</text>
+            <text x="148" y="196" text-anchor="start" class="svg-tm">waits</text>
+            <path d="M68 112 C76 108, 80 106, 86 104" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <rect x="86" y="54" width="118" height="96" rx="8" class="f-accent s-ink" stroke-width="3"/>
+            <text x="145" y="79" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-weight:600;font-size:11.5px">OPTIONS /orders</text>
+            <path d="M98 90 H192" fill="none" class="s-ink" stroke-width="2"/>
+            <text x="145" y="115" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-weight:600">PUT?</text>
+            <text x="145" y="135" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink)">authorization?</text>
+            <path d="M206 102 H232" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <path d="M226 82 L232 88 M226 122 L232 116" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M238 186 V48 a10 10 0 0 1 10 -10 h64 a10 10 0 0 1 10 10 V186 Z" class="s-ink" stroke-width="3" stroke-linejoin="round" style="fill:var(--c-green)"/>
+            <rect x="258" y="66" width="44" height="10" rx="5" class="f-surface s-ink" stroke-width="2"/>
+            <circle cx="306" cy="116" r="4.5" class="f-ink"/>
+            <path d="M234 186 H330" fill="none" class="s-ink" stroke-width="3" stroke-linecap="round"/>
+            <text x="280" y="26" text-anchor="middle" class="svg-tm">api.example.com</text>
           </svg>
-          <figcaption>Highlighted: step 4, because the browser decides only after the server has answered.</figcaption>
+          <figcaption>Yellow: the <code>OPTIONS</code> question, because the real <code>PUT</code> waits until the API says yes.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> The doorman (<code>browser</code>) lets your request leave. When the reply comes back, it reads the <strong>guest list</strong> first. Your script sees the reply only if your origin is on that list.</p>
-          <p class="hood"><strong>Under the hood.</strong> In step 2 the browser adds <code>Origin: https://app.example.com</code> itself; your code cannot change it. In step 3 the server sets <code>Access-Control-Allow-Origin</code> to that exact origin or to <code>*</code>. In step 4 a mismatch makes <code>fetch()</code> reject with a <code>TypeError</code>, and only the console says why.</p>
+          <p><strong>In plain words.</strong> A <code>PUT</code>, or a request with a login header, could change data. So the <strong>doorman</strong> knocks on the API's door first and asks: may I bring this in?</p>
+          <div class="hood"><p><strong>Under the hood.</strong> This knock is the preflight, an <code>OPTIONS</code> request sent without cookies. The browser sends one for a method other than <code>GET</code>, <code>HEAD</code> or <code>POST</code>, for a header off the safelist such as <code>Authorization</code>, and for a <code>Content-Type</code> outside three form types, so <code>application/json</code> counts. The answer needs a 2xx status and matching <code>Access-Control-Allow-*</code> headers.</p></div>
+<pre><code>OPTIONS /orders
+Origin: https://app.example.com
+Access-Control-Request-Method: PUT
+Access-Control-Request-Headers: authorization
+
+204 No Content
+Access-Control-Allow-Origin: https://app.example.com
+Access-Control-Allow-Methods: PUT
+Access-Control-Allow-Headers: authorization</code></pre>
+          <div class="tags"><span class="tag">doorman = the browser</span><span class="tag">knock = preflight (OPTIONS)</span><span class="tag">door = the API's CORS handler</span></div>
         </div>
       </div>
     </li>
 
     <li class="wrap zoom">
-      <h2>A risky request calls ahead with <code>OPTIONS</code> first.</h2>
+      <h2>Your code gets the reply only if the guest list names your origin.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 392" role="img" aria-label="Sequence: your script asks for a PUT with a JSON body; the browser first sends OPTIONS /orders with Access-Control-Request-Method: PUT; the API replies 204 No Content with Access-Control-Allow-Methods: PUT; only then does the browser send the real PUT, and the 200 OK reply goes back to your script after the guest-list check.">
-            <use href="#ico-robot" x="22" y="4" width="52" height="52"/>
-            <use href="#ico-browser" x="134" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
-            <text class="n" x="48" y="74">Your script</text><text class="t" x="48" y="90">fetch()</text>
-            <text class="n" x="160" y="74">Doorman</text><text class="t" x="160" y="90">browser</text>
-            <text class="n" x="340" y="74">The API</text><text class="t" x="340" y="90">api.example.com</text>
-            <line class="life" x1="48" y1="100" x2="48" y2="380"/><line class="life" x1="160" y1="100" x2="160" y2="380"/><line class="life" x1="340" y1="100" x2="340" y2="380"/>
-
-            <circle class="num-bg" cx="16" cy="126" r="9"/><text class="num" x="16" y="130">1</text>
-            <line class="wire" x1="50" y1="126" x2="156" y2="126" marker-end="url(#arrow)"/>
-            <text class="l" x="104" y="117">PUT + JSON</text>
-
-            <circle class="num-bg" cx="16" cy="184" r="9"/><text class="num" x="16" y="188">2</text>
-            <line class="hot" x1="162" y1="184" x2="336" y2="184" marker-end="url(#arrow-hl)"/>
-            <use href="#ico-letter" x="172" y="167" width="34" height="34"/>
-            <text class="l h" x="268" y="175">OPTIONS /orders</text>
-            <ellipse class="pen" cx="268" cy="171" rx="68" ry="17" transform="rotate(-4 268 171)"/>
-            <text class="t" x="250" y="210" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Access-Control-Request-Method: PUT</text>
-
-            <circle class="num-bg" cx="16" cy="252" r="9"/><text class="num" x="16" y="256">3</text>
-            <line class="wire" x1="338" y1="252" x2="164" y2="252" marker-end="url(#arrow)"/>
-            <text class="l" x="250" y="244">204 No Content</text>
-            <text class="t" x="250" y="276" style="paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round">Access-Control-Allow-Methods: PUT</text>
-
-            <circle class="num-bg" cx="16" cy="316" r="9"/><text class="num" x="16" y="320">4</text>
-            <line class="wire" x1="162" y1="316" x2="336" y2="316" marker-end="url(#arrow)"/>
-            <text class="l" x="250" y="308">PUT /orders</text>
-
-            <circle class="num-bg" cx="16" cy="362" r="9"/><text class="num" x="16" y="366">5</text>
-            <line class="wire" x1="338" y1="362" x2="52" y2="362" marker-end="url(#arrow)"/>
-            <text class="l" x="200" y="354">200 OK, guest list checked</text>
+          <svg viewBox="0 0 340 218" role="img" aria-label="The doorman, the browser, holds your blue Origin badge next to a big yellow guest list from api.example.com. The list reads Allow-Origin, https://app.example.com, with a check mark. A solid arrow hands a reply box to your page, labelled res.json(). A dashed line leads to a red stop sign labelled TypeError.">
+            <use href="#ico-browser" x="14" y="20" width="64" height="64"/>
+            <text x="46" y="98" text-anchor="middle" class="svg-t">res.json()</text>
+            <use href="#ico-stop" x="20" y="136" width="52" height="52"/>
+            <text x="46" y="206" text-anchor="middle" class="svg-t">TypeError</text>
+            <path d="M128 124 C112 116, 100 90, 80 60" fill="none" class="s-ink" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <use href="#ico-box" x="89" y="88" width="30" height="30"/>
+            <path d="M132 150 C114 168, 94 172, 72 166" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <use href="#ico-doorman" x="112" y="74" width="84" height="84"/>
+            <text x="154" y="174" text-anchor="middle" class="svg-tm">browser</text>
+            <use href="#ico-badge" x="130" y="16" width="48" height="48"/>
+            <text x="128" y="46" text-anchor="end" class="svg-tm">Origin</text>
+            <path d="M176 42 C192 44, 198 58, 204 64" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <rect x="206" y="38" width="120" height="146" rx="8" class="f-accent s-ink" stroke-width="3"/>
+            <rect x="246" y="28" width="40" height="18" rx="4" class="f-line s-ink" stroke-width="2.5"/>
+            <text x="266" y="72" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-weight:600">Allow-Origin</text>
+            <path d="M218 84 H314" fill="none" class="s-ink" stroke-width="2"/>
+            <text x="266" y="106" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-size:11.5px">https://</text>
+            <text x="266" y="124" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-size:11.5px;font-weight:600">app.example.com</text>
+            <path d="M246 148 l11 11 l22 -24" fill="none" class="s-ink" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="266" y="202" text-anchor="middle" class="svg-tm">api.example.com</text>
           </svg>
-          <figcaption>Highlighted: step 2, because the real <code>PUT</code> waits until the server says yes.</figcaption>
+          <figcaption>Yellow: the guest list, because the browser compares it with the badge before your code sees a byte.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> Some requests could change data on a server that never expected them. So the browser <strong>calls ahead</strong> (<code>preflight</code>) and asks: may this origin send a <code>PUT</code> with JSON? Only a yes lets the real request out.</p>
-          <p class="hood"><strong>Under the hood.</strong> A <code>PUT</code>, a JSON body or an <code>Authorization</code> header triggers step 2; plain <code>GET</code>s and form posts skip it. In step 3 the server answers with <code>Access-Control-Allow-Methods</code>, <code>Access-Control-Allow-Headers</code> and the guest list. The browser caches that yes for <code>Access-Control-Max-Age</code> seconds (5 by default), so each miss costs one extra round trip.</p>
+          <p><strong>In plain words.</strong> The API sends its <strong>guest list</strong> back with the reply. The doorman holds the reply and reads the list. <span class="pill yes">on the list</span> your code gets the reply. <span class="pill no">not on it</span> your code gets an error.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> The check passes when <code>Access-Control-Allow-Origin</code> matches the request's <code>Origin</code> exactly, or is <code>*</code>. The header holds one origin, not a list, so an API that allows several echoes the one it got and adds <code>Vary: Origin</code>. On failure, <code>fetch()</code> rejects with a <code>TypeError</code>, and only the console says why.</p></div>
+          <div class="tags"><span class="tag">guest list = Access-Control-Allow-Origin</span><span class="tag">reply box = Response</span></div>
+          <p class="big">The server never blocks anything. The browser does.</p>
         </div>
       </div>
     </li>
 
     <li class="wrap zoom">
-      <h2>With cookies, the guest list must name you exactly.</h2>
+      <h2>With cookies, the list must name you exactly.</h2>
       <div class="zoom-body">
         <figure class="drawing">
-          <svg viewBox="0 0 400 312" role="img" aria-label="Your script sends a request with credentials: 'include', so your cookie travels to the API. Two possible replies: Access-Control-Allow-Origin: * is blocked, while the exact origin https://app.example.com together with Access-Control-Allow-Credentials: true is allowed.">
-            <use href="#ico-robot" x="22" y="4" width="52" height="52"/>
-            <use href="#ico-server" x="314" y="4" width="52" height="52"/>
-            <text class="n" x="48" y="74">Your script</text><text class="t" x="48" y="90">fetch()</text>
-            <text class="n" x="340" y="74">The API</text><text class="t" x="340" y="90">api.example.com</text>
-            <line class="wire" x1="80" y1="30" x2="308" y2="30" marker-end="url(#arrow)"/>
-            <use href="#ico-key" x="176" y="13" width="34" height="34"/>
-            <text class="l" x="194" y="62">with your cookie</text>
-            <text class="t" x="194" y="82">credentials: 'include'</text>
-
-            <rect class="box" x="56" y="108" width="336" height="66" rx="6"/>
-            <use href="#ico-stop" x="6" y="121" width="40" height="40"/>
-            <text class="t" x="70" y="134" style="text-anchor:start">Access-Control-Allow-Origin: *</text>
-            <ellipse class="pen" cx="300" cy="129" rx="15" ry="14" transform="rotate(-6 300 129)"/>
-            <text class="l" x="70" y="160" style="text-anchor:start">wildcard: blocked when cookies ride along</text>
-
-            <rect class="box" x="56" y="190" width="336" height="110" rx="6"/>
-            <use href="#ico-check" x="6" y="225" width="40" height="40"/>
-            <text class="t" x="70" y="214" style="text-anchor:start">Access-Control-Allow-Origin:</text>
-            <text class="t" x="86" y="232" style="text-anchor:start">https://app.example.com</text>
-            <text class="t" x="70" y="256" style="text-anchor:start">Access-Control-Allow-Credentials: true</text>
-            <text class="l" x="70" y="284" style="text-anchor:start">exact origin + true: allowed</text>
+          <svg viewBox="0 0 340 222" role="img" aria-label="A pink cookie labelled credentials: 'include' rides along with the request. Left: a guest list that says Allow-Origin star is crossed out in red and marked blocked. Right: a guest list that names app.example.com carries a yellow stamp, Allow-Credentials true, and is marked passes.">
+            <circle cx="40" cy="36" r="22" class="s-ink" stroke-width="3" style="fill:var(--c-pink)"/>
+            <circle cx="32" cy="28" r="2.8" class="f-ink"/>
+            <circle cx="47" cy="30" r="2.8" class="f-ink"/>
+            <circle cx="36" cy="44" r="2.8" class="f-ink"/>
+            <circle cx="50" cy="44" r="2.8" class="f-ink"/>
+            <circle cx="26" cy="39" r="2.4" class="f-ink"/>
+            <text x="70" y="42" text-anchor="start" class="svg-t">credentials: 'include'</text>
+            <path d="M46 60 C54 66, 62 68, 70 72" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <path d="M60 50 C110 64, 220 50, 246 68" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+            <rect x="20" y="80" width="128" height="112" rx="8" class="f-surface s-ink" stroke-width="3"/>
+            <rect x="64" y="70" width="40" height="18" rx="4" class="f-line s-ink" stroke-width="2.5"/>
+            <text x="84" y="112" text-anchor="middle" class="svg-t">Allow-Origin</text>
+            <path d="M32 124 H136" fill="none" class="s-line" stroke-width="2"/>
+            <text x="84" y="172" text-anchor="middle" class="svg-tb" style="font-size:44px">*</text>
+            <path d="M46 134 L122 182 M122 134 L46 182" fill="none" stroke-width="5" stroke-linecap="round" style="stroke:var(--no)"/>
+            <text x="84" y="212" text-anchor="middle" class="svg-t" style="fill:var(--no);font-weight:600">blocked</text>
+            <rect x="172" y="80" width="150" height="112" rx="8" class="f-surface s-ink" stroke-width="3"/>
+            <rect x="227" y="70" width="40" height="18" rx="4" class="f-line s-ink" stroke-width="2.5"/>
+            <text x="247" y="104" text-anchor="middle" class="svg-t">Allow-Origin</text>
+            <text x="247" y="122" text-anchor="middle" class="svg-t" style="font-size:11.5px">app.example.com</text>
+            <g transform="rotate(-4 247 158)">
+              <rect x="184" y="136" width="126" height="44" rx="6" class="f-accent s-ink" stroke-width="2.5"/>
+              <text x="247" y="154" text-anchor="middle" class="svg-t" style="fill:var(--accent-ink);font-size:11px;font-weight:600">Allow-Credentials</text>
+              <text x="247" y="172" text-anchor="middle" class="svg-ta">true</text>
+            </g>
+            <text x="247" y="212" text-anchor="middle" class="svg-t" style="fill:var(--yes);font-weight:600">passes</text>
           </svg>
-          <figcaption>Highlighted: the <code>*</code>, because a wildcard never lets a reply with cookies through.</figcaption>
+          <figcaption>Yellow: the <code>Allow-Credentials</code> stamp, because without it the browser drops any reply to a request that carried cookies.</figcaption>
         </figure>
         <div class="words">
-          <p><strong>In plain words.</strong> By default the browser leaves your cookies out of cross-origin calls. Ask for them (<code>credentials: 'include'</code>) and the rules get stricter. The server must name your <strong>exact</strong> origin and say yes to cookies.</p>
-          <p class="hood"><strong>Under the hood.</strong> The reply needs your exact origin in <code>Access-Control-Allow-Origin</code> plus <code>Access-Control-Allow-Credentials: true</code>. With <code>*</code>, the browser blocks the reply. A server for many origins checks the request's <code>Origin</code> against an allowlist and echoes the match back.</p>
+          <p><strong>In plain words.</strong> By default, a cross-origin <code>fetch()</code> sends no cookies. Ask for them, and the rules get stricter: <strong>anyone</strong> (<code>*</code>) no longer counts, and the list must also say yes to cookies.</p>
+          <div class="hood"><p><strong>Under the hood.</strong> With <code>credentials: 'include'</code>, the check fails on <code>Access-Control-Allow-Origin: *</code> and requires <code>Access-Control-Allow-Credentials: true</code>. The preflight itself never carries cookies, but its answer needs the same two headers.</p></div>
+<pre><code>fetch('https://api.example.com/orders', {
+  credentials: 'include', // send cookies
+});</code></pre>
+          <div class="tags"><span class="tag">anyone = *</span><span class="tag">stamp = Access-Control-Allow-Credentials: true</span></div>
         </div>
       </div>
     </li>
@@ -510,20 +385,20 @@ th{font:600 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;c
   <section class="catch">
     <div class="wrap">
       <h2>CORS hides the reply. It does not stop the request.</h2>
-      <p>A simple <code>POST</code> reaches the server and runs before the browser checks any header. Guard routes that change data with auth and CSRF tokens, not with CORS.</p>
+      <p>A plain <code>GET</code> or form <code>POST</code> skips the knock, so the server runs it even when the browser then hides the answer, and <code>curl</code> ignores CORS completely. Protect writes with auth and CSRF defenses such as <code>SameSite</code> cookies, not with CORS.</p>
     </div>
   </section>
 
   <section class="wrap further">
     <h2>Push further</h2>
-    <details><summary>Why does it work in curl but fail in the browser?</summary><p>CORS is a browser rule that protects the user's logged-in data. curl has no page origin and no user to protect, so it never reads these headers.</p></details>
-    <details><summary>Can I fix a CORS error from the frontend?</summary><p>No. <code>mode: 'no-cors'</code> only returns an opaque reply your code cannot read, so fix the server's headers or call a same-origin proxy.</p></details>
-    <details><summary>What breaks when a CDN caches the reply?</summary><p>If the server echoes the request's <code>Origin</code>, a CDN can hand origin A's guest list to origin B. Send <code>Vary: Origin</code> so the cache keeps one copy per origin.</p></details>
+    <details><summary>Does <code>mode: 'no-cors'</code> make the error go away?</summary><p>The error goes away, and so does the data. You get an opaque response: status <code>0</code>, no headers, and a body your code cannot read.</p></details>
+    <details><summary>Why does a server crash look like a CORS error?</summary><p>Error pages often come from a layer that skips the CORS headers. A <code>500</code> without a guest list fails the check, so the console blames CORS, not the crash.</p></details>
+    <details><summary>Can the browser skip the knock next time?</summary><p>Yes, for a while. <code>Access-Control-Max-Age</code> caches the answer: 5 seconds by default, capped at 2 hours in Chromium and 24 hours in Firefox.</p></details>
   </section>
 
   <footer class="wrap colophon">
-    <p><strong>Simplified on purpose.</strong> Left out <code>Access-Control-Expose-Headers</code>, redirects, opaque responses and Private Network Access.</p>
-    <p>Sources: <a href="https://fetch.spec.whatwg.org/#http-cors-protocol">the Fetch Standard, CORS protocol</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">MDN's CORS guide</a>. Checked against MDN: the simple-request rules, the 5-second <code>Max-Age</code> default, the cookie rules and <code>Vary: Origin</code>. The <code>TypeError</code> name and the <code>no-cors</code> behavior are not verified.</p>
+    <p><strong>Simplified on purpose.</strong> One page, one API, no redirects; <code>Access-Control-Expose-Headers</code> and the <code>null</code> origin are left out.</p>
+    <p>Sources: the <a href="https://fetch.spec.whatwg.org/#http-cors-protocol">Fetch Standard, CORS protocol</a>, MDN's <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">CORS guide</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Max-Age"><code>Access-Control-Max-Age</code></a>. Not verified: how often error pages drop the CORS headers; it depends on your framework and proxy.</p>
   </footer>
 </main>
 </body>
