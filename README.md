@@ -31,7 +31,7 @@ Simple means fewer ideas, never wrong ones. Pick how far down you go:
 | default | a developer new to the topic | 3–5 zooms with real names, each with a short "Under the hood". |
 | `deep` | an engineer who wants the internals | Sequence diagrams and state machines, failure modes, real numbers, real code. |
 
-![A zoom: a stamped step with a sequence diagram in a white card, the deciding step highlighted, the same idea in plain words and under the hood](docs/zoom.png)
+![A step: a scene card on the left where a doorman knocks on the API's door with a yellow OPTIONS card, and the stamp, claim and words on the right](docs/zoom.png)
 
 Ask about code in your project and it reads the code first, then uses the real file and function names.
 
@@ -39,13 +39,13 @@ The page is a single HTML file: no framework, light and dark mode, phone-friendl
 
 The skill ships a reference page, [`skills/kiss/example.html`](skills/kiss/example.html) (how an email reaches an inbox), that sets the drawing bar for every run.
 
-See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)) Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)) and DNS ([`how-dns-works.html`](examples/how-dns-works.html)).
+See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html), Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)) and DNS ([`how-dns-works.html`](examples/how-dns-works.html)).
 
-<img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a preflight sequence diagram that fits the screen" width="320">
+<img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a big yellow guest-list clipboard scene above its stamped step" width="320">
 
 Every page draws with the same cast of characters and scene props, so you remember pictures, not boxes.
 
-![The cast: 18 characters and 9 scene props](docs/cast.png)
+![The cast: 19 characters and 9 scene props](docs/cast.png)
 
 ## Install
 
