@@ -41,6 +41,10 @@ See [examples/](examples/) for the same topic at two depths: [`how-cors-works.ht
 
 <img src="docs/phone-deep-dark.jpg" alt="The deep page on a phone in dark mode: a preflight sequence diagram that fits the screen" width="320">
 
+Every page draws with the same cast of hand-drawn characters, so you remember pictures, not boxes.
+
+![The cast: 18 hand-drawn characters with crayon fills](docs/cast.png)
+
 ## Install
 
 ```
