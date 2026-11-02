@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How Express Routes Requests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a story told top to bottom, one stamped step per stop, picture left, few words right */
+:root {
+  --bg: #F0EEE6;
+  --surface: #FFFFFF;
+  --ink: #141413;
+  --muted: #5F5D57;
+  --line: #D6D2C6;
+  --accent: #D97757;
+  --accent-ink: #1F0C04;
+  --yes: #4E6B38;
+  --no: #A8323E;
+  --font-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+    --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+  --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+  color-scheme: dark;
+}
+
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; }
+.page { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; display: grid; gap: 56px; }
+
+/* hero */
+.hero { display: grid; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 6vw, 64px); line-height: 1.02; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.hero p { margin: 0; font-size: 20px; color: var(--muted); max-width: 60ch; }
+.hero b { color: var(--ink); }
+
+/* route strip */
+.route { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 13px; }
+.route span.stop { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.route span.arrow { color: var(--muted); }
+
+/* steps */
+.step { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 36px; align-items: center; }
+.step + .step { border-top: 1px dashed var(--line); padding-top: 48px; }
+.pic { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.pic svg { display: block; width: 100%; height: auto; }
+.words { display: grid; gap: 12px; min-width: 0; }
+.head { display: flex; gap: 14px; align-items: center; }
+.stamp { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border: 2px dashed var(--accent); border-radius: 6px; font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--ink); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.stamp.why { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.small { margin: 0; font-size: 14px; color: var(--muted); }
+.reasons { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 62ch; }
+.reasons li::marker { font-family: var(--font-display); font-weight: 800; color: var(--muted); }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 3.2vw, 32px); line-height: 1.12; margin: 0; text-wrap: balance; }
+.words p { margin: 0; max-width: 62ch; }
+.big-idea { font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.3; border-left: 4px solid var(--accent); padding-left: 14px; }
+
+code, .tag { font-family: var(--font-mono); font-size: .82em; }
+code { background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 3px 8px; color: var(--muted); }
+
+/* small tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td code { overflow-wrap: break-word; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.pill.yes { background: color-mix(in srgb, var(--yes) 16%, transparent); color: var(--yes); }
+.pill.no { background: color-mix(in srgb, var(--no) 14%, transparent); color: var(--no); }
+.pill.new { background: color-mix(in srgb, var(--accent) 26%, transparent); color: var(--ink); }
+
+/* before / after */
+.ba { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ba > div { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); display: grid; gap: 6px; }
+.ba h3 { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ba ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px; }
+
+/* doors */
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.door { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--surface); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.door h3 { margin: 0; font-family: var(--font-display); font-size: 19px; }
+.door p { margin: 0; font-size: 15px; color: var(--muted); }
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+
+/* status */
+.status { border: 2px solid var(--ink); border-radius: 18px; padding: 22px; display: grid; gap: 14px; background: var(--surface); }
+.status h2 { font-size: 26px; }
+.status ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.status li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+a { color: inherit; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* svg paint */
+.s-ink { stroke: var(--ink); }
+.s-muted { stroke: var(--muted); }
+.s-line { stroke: var(--line); }
+.s-accent { stroke: var(--accent); }
+.f-surface { fill: var(--surface); }
+.f-bg { fill: var(--bg); }
+.f-ink { fill: var(--ink); }
+.f-muted { fill: var(--muted); }
+.f-accent { fill: var(--accent); }
+.f-yes { fill: var(--yes); }
+.f-no { fill: var(--no); }
+.f-line { fill: var(--line); }
+.svg-t { font-family: var(--font-mono); font-size: 12px; fill: var(--ink); }
+.svg-tm { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.svg-tb { font-family: var(--font-display); font-weight: 700; font-size: 15px; fill: var(--ink); }
+.svg-ta { font-family: var(--font-display); font-weight: 700; font-size: 14px; fill: var(--accent-ink); }
+
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .ba, .doors { grid-template-columns: minmax(0, 1fr); }
+  .status li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="hero">
+    <div class="eyebrow">Express · explained simply</div>
+    <h1>How Express routes a request</h1>
+    <p>A browser asks for <code>GET /users/42</code>. Express walks it down <b>one list</b>, in the order you wrote your code, until a <b>route</b> sends a reply or the list <b>runs out</b>.</p>
+    <div class="route" aria-label="The route in short">
+      <span class="stop">GET /users/42</span><span class="arrow">→</span>
+      <span class="stop">app.handle</span><span class="arrow">→</span>
+      <span class="stop">next()</span><span class="arrow">→</span>
+      <span class="stop">layer.match</span><span class="arrow">→</span>
+      <span class="stop">dispatch</span><span class="arrow">→</span>
+      <span class="stop">404</span>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="An order ticket for GET /users/42 goes into the order window, app.handle, which passes it to router.handle and keeps a back-up slip called done, set to finalhandler">
+        <g transform="translate(20 40)">
+          <path d="M0 6 Q0 0 6 0 H100 Q106 0 106 6 V124 L97 132 L88 124 L79 132 L70 124 L61 132 L53 124 L44 132 L35 124 L26 132 L18 124 L9 132 L0 124 Z" class="f-surface s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+          <text x="14" y="32" text-anchor="start" class="svg-tb">GET</text>
+          <text x="14" y="54" text-anchor="start" class="svg-t">/users/42</text>
+          <rect x="14" y="72" width="70" height="7" rx="3.5" class="f-line"/>
+          <rect x="14" y="88" width="52" height="7" rx="3.5" class="f-line"/>
+          <rect x="14" y="104" width="62" height="7" rx="3.5" class="f-line"/>
+        </g>
+        <text x="73" y="198" text-anchor="middle" class="svg-tm">req</text>
+        <path d="M128 100 C152 100, 168 92, 198 90" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <text x="253" y="28" text-anchor="middle" class="svg-t">app.handle</text>
+        <rect x="186" y="38" width="134" height="100" rx="10" class="f-surface s-ink" stroke-width="2.5"/>
+        <rect x="200" y="52" width="106" height="72" rx="4" class="f-bg"/>
+        <text x="253" y="92" text-anchor="middle" class="svg-tm">router.handle</text>
+        <rect x="178" y="138" width="150" height="10" rx="3" class="f-line s-ink" stroke-width="2"/>
+        <path d="M283 148 V160" class="s-muted" stroke-width="2"/>
+        <rect x="246" y="160" width="74" height="26" rx="4" class="f-accent"/>
+        <text x="283" y="178" text-anchor="middle" class="svg-ta">done</text>
+        <text x="283" y="204" text-anchor="middle" class="svg-tm">finalhandler</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">1</div><h2>Express hands the ticket to its router</h2></div>
+      <p>Node's server gets the request and calls your app like a plain function. The app preps the ticket, then hands it to its router with a <b>back-up slip</b>.</p>
+      <p><code>app.listen</code> passes the app to <code>http.createServer</code>, so each request runs <code>app.handle(req, res)</code>. It sets <code>X-Powered-By: Express</code> and points <code>req</code> and <code>res</code> at Express's prototypes, which is where <code>res.send</code> comes from. Then it calls <code>this.router.handle(req, res, done)</code>, where <code>done</code> is <code>finalhandler(req, res)</code>.</p>
+      <div class="tags">
+        <span class="tag">ticket = req</span>
+        <span class="tag">order window = app.handle</span>
+        <span class="tag">back-up slip = finalhandler</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="Two stations stand on one counter. The ticket is at stack[0], whose sign is a slash, and next() moves it on to stack[1], whose sign is /users/:id">
+        <rect x="12" y="148" width="316" height="12" rx="3" class="f-line"/>
+        <rect x="36" y="20" width="76" height="34" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+        <text x="74" y="43" text-anchor="middle" class="svg-tb">/</text>
+        <path d="M74 54 V70" class="s-ink" stroke-width="2.5"/>
+        <rect x="20" y="70" width="108" height="78" rx="10" class="f-surface s-ink" stroke-width="2.5"/>
+        <g transform="translate(38 82)">
+          <path d="M0 4 Q0 0 4 0 H68 Q72 0 72 4 V44 L66 50 L60 44 L54 50 L48 44 L42 50 L36 44 L30 50 L24 44 L18 50 L12 44 L6 50 L0 44 Z" class="f-bg s-ink" stroke-width="2" stroke-linejoin="round"/>
+          <text x="36" y="20" text-anchor="middle" class="svg-tm">/users/42</text>
+          <rect x="14" y="28" width="44" height="6" rx="3" class="f-line"/>
+        </g>
+        <rect x="206" y="20" width="112" height="34" rx="6" class="f-surface s-line" stroke-width="2"/>
+        <text x="262" y="42" text-anchor="middle" class="svg-t">/users/:id</text>
+        <path d="M262 54 V70" class="s-line" stroke-width="2"/>
+        <rect x="208" y="70" width="108" height="78" rx="10" class="f-surface s-line" stroke-width="2"/>
+        <text x="262" y="104" text-anchor="middle" class="svg-tm">GET</text>
+        <rect x="236" y="116" width="52" height="6" rx="3" class="f-line"/>
+        <rect x="138" y="76" width="64" height="26" rx="13" class="f-accent"/>
+        <text x="170" y="94" text-anchor="middle" class="svg-ta">next()</text>
+        <path d="M128 122 C150 138, 186 138, 208 122" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <text x="74" y="182" text-anchor="middle" class="svg-t">stack[0]</text>
+        <text x="74" y="198" text-anchor="middle" class="svg-tm">app.use</text>
+        <text x="262" y="182" text-anchor="middle" class="svg-t">stack[1]</text>
+        <text x="262" y="198" text-anchor="middle" class="svg-tm">app.get</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">2</div><h2>next() shows the ticket to each station in order</h2></div>
+      <p>Your setup code built the line. Each <code>app.use</code> and <code>app.get</code> added one <b>station</b> to the end. The router starts at the first station and moves right.</p>
+<pre>const app = express()
+app.use(logger)              // stack[0]
+app.get('/users/:id', show)  // stack[1]
+app.listen(3000)</pre>
+      <p>The line is <code>router.stack</code>, an array of <code>Layer</code> objects. <code>next()</code> takes <code>stack[idx++]</code> and calls <code>layer.match(path)</code>. <code>stack[0]</code> has path <code>/</code> and <code>end: false</code>, so it fits every URL. It has no <code>route</code>, so the router calls <code>logger(req, res, next)</code>. When <code>logger</code> calls <code>next()</code>, the walk goes on at <code>stack[1]</code>.</p>
+      <p>A real ticket goes to one station. Here every station that fits can work on it, then pass it on.</p>
+      <div class="tags">
+        <span class="tag">line = router.stack</span>
+        <span class="tag">station = Layer</span>
+        <span class="tag">prep station = middleware</span>
+        <span class="tag">pass it on = next()</span>
+      </div>
+      <p class="big-idea">Express has no route table. It walks one list, in the order you wrote it.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="The sign /users/:id lines up with the ticket /users/42. The blank :id takes 42, which becomes req.params id 42, and the menu lists GET">
+        <rect x="20" y="14" width="212" height="52" rx="8" class="f-surface s-ink" stroke-width="2.5"/>
+        <rect x="32" y="26" width="100" height="28" rx="5" class="f-bg"/>
+        <text x="82" y="45" text-anchor="middle" class="svg-t">/users</text>
+        <rect x="142" y="26" width="78" height="28" rx="5" class="f-bg s-ink" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="181" y="45" text-anchor="middle" class="svg-t">/:id</text>
+        <path d="M82 54 V104" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <path d="M181 54 V104" class="s-ink" stroke-width="2.5"/>
+        <g transform="translate(20 90)">
+          <path d="M0 6 Q0 0 6 0 H206 Q212 0 212 6 V58 L198.75 66 L185.5 58 L172.25 66 L159 58 L145.75 66 L132.5 58 L119.25 66 L106 58 L92.75 66 L79.5 58 L66.25 66 L53 58 L39.75 66 L26.5 58 L13.25 66 L0 58 Z" class="f-surface s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+          <rect x="12" y="14" width="100" height="28" rx="5" class="f-bg"/>
+          <text x="62" y="33" text-anchor="middle" class="svg-t">/users</text>
+          <rect x="122" y="14" width="78" height="28" rx="5" class="f-bg"/>
+          <text x="161" y="33" text-anchor="middle" class="svg-t">/42</text>
+        </g>
+        <path d="M181 158 V172" class="s-ink" stroke-width="2.5"/>
+        <text x="20" y="192" text-anchor="start" class="svg-t">req.params</text>
+        <rect x="128" y="172" width="106" height="30" rx="6" class="f-accent"/>
+        <text x="181" y="192" text-anchor="middle" class="svg-ta">id: '42'</text>
+        <rect x="252" y="14" width="70" height="104" rx="8" class="f-surface s-line" stroke-width="2"/>
+        <text x="287" y="38" text-anchor="middle" class="svg-tb">menu</text>
+        <rect x="262" y="50" width="50" height="26" rx="5" class="f-yes" opacity=".3"/>
+        <text x="287" y="68" text-anchor="middle" class="svg-t">GET</text>
+        <rect x="266" y="90" width="42" height="6" rx="3" class="f-line"/>
+        <text x="287" y="138" text-anchor="middle" class="svg-tm">methods</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">3</div><h2>The next station reads its sign and fills in the blank</h2></div>
+      <p>The sign on <code>stack[1]</code> says <code>/users/:id</code>. The ticket says <code>/users/42</code>. They fit, so the blank <code>:id</code> gets <code>42</code>. Then the station checks its <b>menu</b> for GET.</p>
+      <p>The <code>Layer</code> built its matcher with <code>path-to-regexp</code>, using <code>end: true</code> and <code>trailing: true</code>. A hit returns <code>{ path: '/users/42', params: { id: '42' } }</code>. Next, <code>route._handlesMethod('GET')</code> finds <code>methods.get</code>, and a <code>HEAD</code> request also counts as GET. The router copies the match to <code>req.params</code>. Then <code>processParams</code> runs any <code>app.param('id', …)</code> callback, once per value in a request.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Path</th><th>Fits the sign?</th></tr></thead>
+          <tbody>
+            <tr><td><code>/users/42</code></td><td><span class="pill yes">yes</span> <code>id: '42'</code></td></tr>
+            <tr><td><code>/users/42/</code></td><td><span class="pill yes">yes</span> Strict routing is off.</td></tr>
+            <tr><td><code>/USERS/42</code></td><td><span class="pill yes">yes</span> Matching ignores case.</td></tr>
+            <tr><td><code>/users/42/posts</code></td><td><span class="pill no">no</span> <code>end: true</code> needs the whole path.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tags">
+        <span class="tag">sign = layer path</span>
+        <span class="tag">blank = req.params.id</span>
+        <span class="tag">menu = route.methods</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="Inside the Route for /users/:id, the get layer hands the ticket to the cook, show, who sends the dish out with res.send">
+        <rect x="16" y="24" width="130" height="112" rx="12" class="f-surface s-ink" stroke-width="2.5"/>
+        <text x="81" y="50" text-anchor="middle" class="svg-tb">Route</text>
+        <text x="81" y="68" text-anchor="middle" class="svg-tm">/users/:id</text>
+        <rect x="26" y="84" width="110" height="32" rx="6" class="f-accent"/>
+        <text x="81" y="105" text-anchor="middle" class="svg-ta">get · show</text>
+        <text x="81" y="158" text-anchor="middle" class="svg-tm">route.stack</text>
+        <text x="176" y="86" text-anchor="middle" class="svg-tm">dispatch</text>
+        <path d="M146 100 C164 100, 174 102, 188 104" fill="none" class="s-ink" stroke-width="2.5"/>
+        <path d="M198 104 L188 98 L188 110 Z" class="f-ink"/>
+        <rect x="208" y="34" width="30" height="20" rx="6" class="f-surface s-ink" stroke-width="2"/>
+        <circle cx="223" cy="68" r="15" class="f-ink"/>
+        <rect x="201" y="88" width="44" height="62" rx="18" class="f-ink"/>
+        <text x="223" y="172" text-anchor="middle" class="svg-t">show()</text>
+        <path d="M246 114 C252 116, 256 118, 260 122" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+        <path d="M262 128 A28 28 0 0 1 318 128 Z" class="f-surface s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="290" cy="96" r="4" class="f-ink"/>
+        <ellipse cx="290" cy="130" rx="32" ry="7" class="f-surface s-ink" stroke-width="2.5"/>
+        <text x="290" y="158" text-anchor="middle" class="svg-t">res.send()</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">4</div><h2>The station's cook makes the dish</h2></div>
+      <p>Inside the station is a short line of its own: one <b>cook</b> per handler you passed to <code>app.get</code>. The station gives the ticket to the first cook for GET. The cook sends the dish out, and the walk ends.</p>
+      <p>The station's own function calls <code>route.dispatch(req, res, next)</code>. <code>route.stack</code> holds one <code>Layer</code> per handler, tagged <code>layer.method = 'get'</code>. <code>dispatch</code> picks the next layer whose method is empty or matches, and calls <code>show(req, res, next)</code>. <code>res.send('user 42')</code> writes the reply, and nobody calls <code>next</code> again. A cook can skip the rest of the station with <code>next('route')</code>.</p>
+      <div class="tags">
+        <span class="tag">cook = handler</span>
+        <span class="tag">station's own line = route.stack</span>
+        <span class="tag">dish = res.send()</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="step">
+    <div class="pic">
+      <svg viewBox="0 0 340 220" role="img" aria-label="The ticket passes both stations and falls off the end of the counter, so the back-up slip goes out: 404 Cannot GET /users/42, from finalhandler">
+        <rect x="12" y="160" width="172" height="12" rx="3" class="f-line"/>
+        <rect x="24" y="40" width="48" height="28" rx="5" class="f-surface s-line" stroke-width="2"/>
+        <text x="48" y="59" text-anchor="middle" class="svg-t">/</text>
+        <path d="M48 68 V88" class="s-line" stroke-width="2"/>
+        <rect x="16" y="88" width="64" height="72" rx="8" class="f-surface s-line" stroke-width="2"/>
+        <rect x="92" y="40" width="70" height="28" rx="5" class="f-surface s-line" stroke-width="2"/>
+        <text x="127" y="59" text-anchor="middle" class="svg-t">…/:id</text>
+        <path d="M127 68 V88" class="s-line" stroke-width="2"/>
+        <rect x="95" y="88" width="64" height="72" rx="8" class="f-surface s-line" stroke-width="2"/>
+        <text x="48" y="192" text-anchor="middle" class="svg-tm">stack[0]</text>
+        <text x="127" y="192" text-anchor="middle" class="svg-tm">stack[1]</text>
+        <g transform="translate(182 100) rotate(20)">
+          <path d="M0 4 Q0 0 4 0 H40 Q44 0 44 4 V46 L38 52 L33 46 L27 52 L22 46 L16 52 L11 46 L5 52 L0 46 Z" class="f-surface s-ink" stroke-width="2.5" stroke-linejoin="round"/>
+          <text x="22" y="20" text-anchor="middle" class="svg-tm">GET</text>
+          <rect x="9" y="28" width="26" height="6" rx="3" class="f-line"/>
+        </g>
+        <text x="190" y="208" text-anchor="middle" class="svg-tm">end of stack</text>
+        <path d="M224 126 C228 124, 230 124, 233 124" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="4 3"/>
+        <rect x="234" y="36" width="94" height="134" rx="6" class="f-accent"/>
+        <text x="281" y="86" text-anchor="middle" class="svg-ta">404</text>
+        <text x="281" y="112" text-anchor="middle" class="svg-ta">Cannot GET</text>
+        <text x="281" y="132" text-anchor="middle" class="svg-ta">/users/42</text>
+        <text x="281" y="192" text-anchor="middle" class="svg-tm">finalhandler</text>
+      </svg>
+    </div>
+    <div class="words">
+      <div class="head"><div class="stamp">5</div><h2>If nobody answers, the back-up slip goes out</h2></div>
+      <p>Say <code>show</code> calls <code>next()</code> instead, or the ticket said <code>/teams/7</code>. The walk reaches the <b>end of the line</b>. The router sends the back-up slip from step 1.</p>
+      <p>When <code>next()</code> runs past the last layer, it calls <code>done(layerError)</code>. With no error, <code>finalhandler</code> answers <code>404</code> with the body <code>Cannot GET /users/42</code>. With an error, the router skips routes. It calls only layers whose function takes four arguments.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Handler does</th><th>What happens</th></tr></thead>
+          <tbody>
+            <tr><td><code>res.send(…)</code></td><td><span class="pill yes">sent</span> The walk stops here.</td></tr>
+            <tr><td><code>next()</code></td><td><span class="pill new">404</span> <code>finalhandler</code> sends <code>Cannot GET</code>.</td></tr>
+            <tr><td><code>next(err)</code></td><td><span class="pill no">error</span> Four-argument handlers run. If none replies, <code>finalhandler</code> uses <code>err.status</code> or 500.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tags">
+        <span class="tag">end of the line = idx past stack.length</span>
+        <span class="tag">error station = 4-argument handler</span>
+      </div>
+      <p class="big-idea">A 404 is not an error. It is the end of the line with no reply.</p>
+    </div>
+  </section>
+
+  <section class="status" aria-labelledby="end">
+    <h2 id="end">Before you rely on it</h2>
+    <ul>
+      <li><span class="pill no">catch</span><span>An error handler with three parameters never sees errors. <code>handleError</code> skips any function whose <code>fn.length</code> is not 4. Write <code>(err, req, res, next)</code>, even if you never call <code>next</code>.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Does Express look routes up in a table?</b> No. Each request walks <code>router.stack</code> from index 0. A route near the end is tested after every layer before it.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Do async handlers need try/catch?</b> Not to reach your error handler. When a handler's promise rejects, <code>handleRequest</code> calls <code>next(err)</code> for you.</span></li>
+      <li><span class="pill new">ask next</span><span><b>How does <code>app.use('/api', router)</code> see <code>/users/42</code>?</b> <code>trimPrefix</code> cuts <code>/api</code> from <code>req.url</code> and moves it to <code>req.baseUrl</code>. The next <code>next()</code> puts it back.</span></li>
+      <li><span class="pill new">simplified</span><span>Leaves out <code>OPTIONS</code> auto-replies, <code>mergeParams</code>, regex paths, and the guard that yields with <code>setImmediate</code> after 100 synchronous layers.</span></li>
+      <li><span class="pill yes">sources</span><span>Read at Express 5.3.0 and router 2.2.0, the version Express's <code>package.json</code> asks for (<code>^2.2.0</code>): <a href="https://github.com/expressjs/express/blob/v5.3.0/lib/express.js">express.js</a>, <a href="https://github.com/expressjs/express/blob/v5.3.0/lib/application.js">application.js</a>, router <a href="https://github.com/pillarjs/router/blob/v2.2.0/index.js">index.js</a>, <a href="https://github.com/pillarjs/router/blob/v2.2.0/lib/layer.js">layer.js</a> and <a href="https://github.com/pillarjs/router/blob/v2.2.0/lib/route.js">route.js</a>. Also <a href="https://github.com/pillarjs/finalhandler/blob/v2.1.1/index.js">finalhandler 2.1.1</a> and <a href="https://github.com/pillarjs/path-to-regexp/blob/v8.4.2/src/index.ts">path-to-regexp 8.4.2</a>.</span></li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>

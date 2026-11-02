@@ -38,7 +38,7 @@ The page is a single HTML file in Claude's palette (black ink, warm greys, one o
 
 The skill ships a reference page, [`skills/kiss/example.html`](skills/kiss/example.html) (how an email reaches an inbox), that sets the drawing bar for every run.
 
-See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)), Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)) and DNS ([`how-dns-works.html`](examples/how-dns-works.html)).
+See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)), Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)), DNS ([`how-dns-works.html`](examples/how-dns-works.html)), and one read from real code: how Express routes a request, traced through Express 5's own source ([`how-express-routes-a-request.html`](examples/how-express-routes-a-request.html)).
 
 <img src="docs/phone-dark.jpg" alt="The same step on a phone in dark mode: the cabinet drawing above its stamped heading and words" width="320">
 

@@ -15,7 +15,7 @@ Input: $ARGUMENTS
 
 ## Before you write
 
-- If the topic names code in the current project, read that code first. Use its real names, files and flow.
+- If the topic names code in the current project, read that code first. Use its real names, files and flow. Follow a dependency only as far as the trace goes, and note the version you read.
 - For a general topic, check the facts against a primary source (a spec or the official docs) when you can fetch one.
 - Find the one concrete trace that carries the topic: "You press Send on a note to Bob." The page follows that trace stop by stop. Do not open with a definition.
 - Pick ONE everyday metaphor that runs the whole way, in the words and in the drawings (a post office: letters, a post box, a receipt, a filing cabinet). Never mix in a second one. Where the metaphor bends the truth (a guest list that holds one name), say so in one sentence in that step.
@@ -29,8 +29,8 @@ Start from [template.html](template.html). Copy its `<head>` and `<style>` uncha
    - `.eyebrow`: the area and "explained simply" ("Email · explained simply").
    - h1: 2–6 words, such as "How an email travels". For a decision: "Polling or WebSocket?".
    - The lede `p`: 1–2 sentences with the trace and the answer. Bold 2–3 key words with `<b>`. A real name in the lede goes in `<code>`.
-   - `.route`: 4–7 stops in the order of the trace, each a `span.stop` with a short real name or plain word (`:587`, `MX lookup`), with a `span.arrow` (→) between stops. Keep it on one line at desktop width: about 70 characters in all.
-2. **Steps** (`section.step`, how many: see Depth). Walk the route in order. Each step covers one or two neighboring stops, so the idea of every stop appears in a step (its label need not). A fact that is not on the route goes in the step where it bites, or in the end box.
+   - `.route`: 4–7 stops in the order of the trace, each a `span.stop` with a short real name or plain word (`:587`, `MX lookup`), with a `span.arrow` (→) between stops. Keep it on one line at desktop width: about 70 characters in all, arrows included.
+2. **Steps** (`section.step`, how many: see Depth). Walk the route in order. Each step covers one or two neighboring stops, so the idea of every stop appears in a step (its label need not). A fact that is not on the route goes in the step where it bites, or in the end box. Setup code that shapes the trace (registering a route) goes in the step where it matters, as a short `<pre>`.
    - `.pic`: one drawing (see Drawings).
    - `.words`: a `.head` with the `.stamp` number and an h2 that says what happens, in plain words and without a period. Then 1–3 short paragraphs: what happens in plain words, then the real mechanism with the real names in `<code>`.
    - `.tags`: one tag per metaphor word or plain word, mapped to its real name (`receipt = 250 reply`). Give each mapping once, in the first step that uses it.
@@ -41,7 +41,7 @@ Start from [template.html](template.html). Copy its `<head>` and `<style>` uncha
    - `catch` (`.pill.no`): the one thing that bites people, and what to do instead.
    - `ask next` (`.pill.new`): a question a sharp reader asks next, in bold, then a 1–2 sentence answer. Give one `li` per question (how many: see Depth).
    - `simplified` (`.pill.new`): what the page leaves out on purpose, in one line.
-   - `sources` (`.pill.yes`): the primary sources you used, as links, or the project files as code chips.
+   - `sources` (`.pill.yes`): the primary sources you used, as links, or the project files as code chips. Pin links to the tag or commit you read.
    - `not verified` (`.pill.no`): any claim you could not check. Omit this `li` when there is none.
 
 ## Depth
