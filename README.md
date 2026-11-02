@@ -1,6 +1,6 @@
 # kiss
 
-Keep it simple. Explain any tech topic to a developer as one plain HTML page.
+ELI5 for engineers. Explain any tech topic or codebase as one visual HTML page: the whole route first, then a drawing per step with the real names.
 
 ![The top of a kiss page: the title, a two-line trace, the route of stops, and step 1 with a laptop, an orange key and a post box](docs/hero.png)
 

@@ -1,6 +1,6 @@
 {
   "name": "kiss",
-  "description": "Keep it simple: plain HTML explainers for developers.",
+  "description": "ELI5 for engineers: visual HTML explainers for any tech topic or codebase.",
   "owner": {
     "name": "Eran Peled",
     "url": "https://github.com/eranltd"
@@ -9,7 +9,7 @@
     {
       "name": "kiss",
       "source": "./",
-      "description": "Keep it simple: explain any tech topic to a developer as one plain HTML page with one everyday metaphor, a few picture steps and very few words.",
+      "description": "Explain any tech topic or codebase as one visual HTML page: the whole route first, then a drawing per step with the real names. ELI5 for engineers. Use /kiss <topic>, /kiss simple or /kiss deep.",
       "category": "learning"
     }
   ]
