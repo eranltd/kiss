@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>kiss · ELI5 for engineers</title>
+<meta name="description" content="Type /kiss and a topic. Get one plain HTML page: the whole route first, then a drawing per step with the real names. A free Claude Code skill.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://eranltd.github.io/kiss/">
+<meta property="og:title" content="kiss · ELI5 for engineers">
+<meta property="og:description" content="Type /kiss and a topic. Get one plain HTML page: the whole route first, then a drawing per step with the real names. A free Claude Code skill.">
+<meta property="og:image" content="https://eranltd.github.io/kiss/docs/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='8' fill='%23F7E1D6' stroke='%23D97757' stroke-width='4' stroke-dasharray='9 5'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='800' font-size='36' fill='%23141413'%3EK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a story told top to bottom, one stamped step per stop, picture left, few words right */
+:root {
+  --bg: #F0EEE6;
+  --surface: #FFFFFF;
+  --ink: #141413;
+  --muted: #5F5D57;
+  --line: #D6D2C6;
+  --accent: #D97757;
+  --accent-ink: #1F0C04;
+  --yes: #4E6B38;
+  --no: #A8323E;
+  --font-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+    --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141413; --surface: #1F1E1C; --ink: #F0EEE6; --muted: #A6A398; --line: #3B3934;
+  --accent: #DE8463; --accent-ink: #1F0C04; --yes: #93B57C; --no: #E8848A;
+  color-scheme: dark;
+}
+
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; }
+.page { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; display: grid; gap: 56px; }
+
+/* hero */
+.hero { display: grid; gap: 14px; max-width: 760px; }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 6vw, 64px); line-height: 1.02; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.hero p { margin: 0; font-size: 20px; color: var(--muted); max-width: 60ch; }
+.hero b { color: var(--ink); }
+
+/* route strip */
+.route { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 13px; }
+.route span.stop { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.route span.arrow { color: var(--muted); }
+
+/* steps */
+.step { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 36px; align-items: center; }
+.step + .step { border-top: 1px dashed var(--line); padding-top: 48px; }
+.pic { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.pic svg { display: block; width: 100%; height: auto; }
+.words { display: grid; gap: 12px; min-width: 0; }
+.head { display: flex; gap: 14px; align-items: center; }
+.stamp { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border: 2px dashed var(--accent); border-radius: 6px; font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--ink); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.stamp.why { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.reasons { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 62ch; }
+.reasons li::marker { font-family: var(--font-display); font-weight: 800; color: var(--muted); }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 3.2vw, 32px); line-height: 1.12; margin: 0; text-wrap: balance; }
+.words p { margin: 0; max-width: 62ch; }
+.big-idea { font-family: var(--font-display); font-weight: 700; font-size: 21px; line-height: 1.3; border-left: 4px solid var(--accent); padding-left: 14px; }
+
+code, .tag { font-family: var(--font-mono); font-size: .82em; }
+code { background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+.tag { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 3px 8px; color: var(--muted); }
+
+/* small tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td code { overflow-wrap: break-word; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.pill.yes { background: color-mix(in srgb, var(--yes) 16%, transparent); color: var(--yes); }
+.pill.no { background: color-mix(in srgb, var(--no) 14%, transparent); color: var(--no); }
+.pill.new { background: color-mix(in srgb, var(--accent) 26%, transparent); color: var(--ink); }
+pre { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+
+/* status */
+.status { border: 2px solid var(--ink); border-radius: 18px; padding: 22px; display: grid; gap: 14px; background: var(--surface); }
+.status h2 { font-size: 26px; }
+.status ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.status li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+a { color: inherit; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* svg paint */
+.s-ink { stroke: var(--ink); }
+.s-muted { stroke: var(--muted); }
+.s-line { stroke: var(--line); }
+.s-accent { stroke: var(--accent); }
+.f-surface { fill: var(--surface); }
+.f-bg { fill: var(--bg); }
+.f-ink { fill: var(--ink); }
+.f-muted { fill: var(--muted); }
+.f-accent { fill: var(--accent); }
+.f-yes { fill: var(--yes); }
+.f-no { fill: var(--no); }
+.f-line { fill: var(--line); }
+.svg-t { font-family: var(--font-mono); font-size: 12px; fill: var(--ink); }
+.svg-tm { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.svg-tb { font-family: var(--font-display); font-weight: 700; font-size: 15px; fill: var(--ink); }
+.svg-ta { font-family: var(--font-display); font-weight: 700; font-size: 14px; fill: var(--accent-ink); }
+
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* landing: the acronym, install, gallery, footer */
+.kiss { display: flex; flex-wrap: wrap; gap: 14px; margin-block: 6px 10px; }
+.kiss > div { display: grid; gap: 8px; justify-items: center; }
+.kiss .stamp { width: 92px; height: 92px; font-size: 54px; border-width: 3px; border-radius: 10px; }
+.kiss span { font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.kiss s { text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
+.install { position: relative; max-width: 520px; margin-top: 8px; }
+.install pre { font-size: 14px; padding: 14px 92px 14px 16px; background: var(--surface); border-radius: 12px; }
+.copy { position: absolute; top: 10px; right: 10px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.copy:hover { border-color: var(--ink); }
+.links { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--font-mono); font-size: 13px; }
+.links a { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; }
+.links a:hover { border-color: var(--ink); }
+.links a.go { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.page > * { min-width: 0; }
+.hero > * { min-width: 0; }
+.part { display: grid; gap: 24px; }
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ex { display: grid; align-content: start; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); color: inherit; text-decoration: none; transition: transform .15s ease, border-color .15s ease; }
+.ex:hover { transform: translateY(-2px); border-color: var(--ink); }
+.ex picture { display: block; border-bottom: 1px solid var(--line); }
+.ex img { display: block; width: 100%; height: auto; aspect-ratio: 8 / 5; }
+.ex div { padding: 14px 16px 16px; display: grid; gap: 6px; justify-items: start; }
+.ex h3 { margin: 0; font-family: var(--font-display); font-size: 19px; line-height: 1.2; }
+.ex p { margin: 0; font-size: 15px; color: var(--muted); }
+.ex.featured { grid-column: 1 / -1; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: center; }
+.ex.featured picture { border-bottom: 0; border-right: 1px solid var(--line); }
+.ex.featured div { padding: 24px; gap: 10px; }
+.ex.featured h3 { font-size: clamp(24px, 3vw, 30px); }
+.ex.featured p { font-size: 17px; }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; border-top: 1px dashed var(--line); padding-top: 20px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .status li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .gallery, .ex.featured { grid-template-columns: minmax(0, 1fr); }
+  .ex.featured picture { border-right: 0; border-bottom: 1px solid var(--line); }
+  .ex.featured div { padding: 14px 16px 16px; }
+  .kiss { gap: 10px; }
+  .kiss .stamp { width: 64px; height: 64px; font-size: 38px; }
+  .kiss span { font-size: 11px; }
+  .install { display: grid; gap: 8px; }
+  .install pre { font-size: 12px; padding: 12px 14px; }
+  .copy { position: static; justify-self: start; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header class="hero">
+    <div class="eyebrow">/kiss · a skill for Claude Code</div>
+    <div class="kiss" role="img" aria-label="K I S S: Keep It Simple, Stupid, with Stupid crossed out">
+      <div><div class="stamp">K</div><span>Keep</span></div>
+      <div><div class="stamp">I</div><span>It</span></div>
+      <div><div class="stamp">S</div><span>Simple</span></div>
+      <div><div class="stamp">S</div><span><s>Stupid</s></span></div>
+    </div>
+    <h1>ELI5 for engineers</h1>
+    <p>You're not stupid. You're new to this one topic. Type <code>/kiss</code> and a topic, and get <b>one plain page</b>: the whole route first, then <b>a drawing per step</b>, with <b>the real names</b>.</p>
+    <div class="route" aria-label="What /kiss does, in short">
+      <span class="stop">/kiss topic</span><span class="arrow">→</span>
+      <span class="stop">read first</span><span class="arrow">→</span>
+      <span class="stop">one trace</span><span class="arrow">→</span>
+      <span class="stop">the route</span><span class="arrow">→</span>
+      <span class="stop">a step per stop</span><span class="arrow">→</span>
+      <span class="stop">end box</span>
+    </div>
+    <div class="install">
+<pre id="install">/plugin marketplace add eranltd/claude-plugins
+/plugin install kiss@eranltd</pre>
+      <button class="copy" type="button" data-copy="install">Copy</button>
+    </div>
+    <div class="links">
+      <a class="go" href="examples/how-express-routes-a-request.html">See a live page →</a>
+      <a href="https://github.com/eranltd/kiss">GitHub</a>
+    </div>
+  </header>
+
+  <section class="part" aria-labelledby="made">
+    <h2 id="made">Pages it made</h2>
+    <div class="gallery">
+      <a class="ex featured" href="examples/how-express-routes-a-request.html">
+        <picture>
+          <source srcset="docs/shots/how-express-routes-a-request-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-express-routes-a-request-light.jpg" width="960" height="600" alt="The top of the Express page: the route from GET /users/42 to 404, and step 1 with a ticket and the router">
+        </picture>
+        <div>
+          <span class="pill new">read from code</span>
+          <h3>How Express routes a request</h3>
+          <p>Traced through Express 5's own source. <code>GET /users/42</code> walks one list, in the order you wrote your code, until a route replies.</p>
+        </div>
+      </a>
+      <a class="ex" href="skills/kiss/example.html">
+        <picture>
+          <source srcset="docs/shots/how-an-email-travels-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-an-email-travels-light.jpg" width="960" height="600" loading="lazy" alt="The top of the email page">
+        </picture>
+        <div><span class="tag">reference</span><h3>How an email travels</h3><p>Two hand-offs and three checks, from Send to Bob's inbox.</p></div>
+      </a>
+      <a class="ex" href="examples/how-cors-works.html">
+        <picture>
+          <source srcset="docs/shots/how-cors-works-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-cors-works-light.jpg" width="960" height="600" loading="lazy" alt="The top of the CORS page">
+        </picture>
+        <div><span class="tag">default</span><h3>How CORS works</h3><p>The browser knocks first and reads the API's guest list.</p></div>
+      </a>
+      <a class="ex" href="examples/how-cors-works-deep.html">
+        <picture>
+          <source srcset="docs/shots/how-cors-works-deep-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-cors-works-deep-light.jpg" width="960" height="600" loading="lazy" alt="The top of the deep CORS page">
+        </picture>
+        <div><span class="tag">deep</span><h3>CORS in depth</h3><p>Preflights, cookies, the cache and the bare <code>TypeError</code>.</p></div>
+      </a>
+      <a class="ex" href="examples/how-raft-works.html">
+        <picture>
+          <source srcset="docs/shots/how-raft-works-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-raft-works-light.jpg" width="960" height="600" loading="lazy" alt="The top of the Raft page">
+        </picture>
+        <div><span class="tag">default</span><h3>How Raft servers agree</h3><p>A leader drops off, another takes over, and three of five make a write safe.</p></div>
+      </a>
+      <a class="ex" href="examples/how-google-one-tap-works.html">
+        <picture>
+          <source srcset="docs/shots/how-google-one-tap-works-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-google-one-tap-works-light.jpg" width="960" height="600" loading="lazy" alt="The top of the Google One Tap page">
+        </picture>
+        <div><span class="tag">default</span><h3>How Google One Tap works</h3><p>Google hands the site a sealed letter. Your server checks the seal.</p></div>
+      </a>
+      <a class="ex" href="examples/how-dns-works.html">
+        <picture>
+          <source srcset="docs/shots/how-dns-works-dark.jpg" media="(prefers-color-scheme: dark)">
+          <img src="docs/shots/how-dns-works-light.jpg" width="960" height="600" loading="lazy" alt="The top of the DNS page">
+        </picture>
+        <div><span class="tag">default</span><h3>How DNS finds an address</h3><p>One resolver asks three servers, then keeps a copy for 60 seconds.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="how">
+    <h2 id="how">What happens when you type /kiss</h2>
+
+    <section class="step">
+      <div class="pic">
+        <svg viewBox="0 0 340 220" role="img" aria-label="A terminal where someone types /kiss deep how CORS works, and one page comes back">
+          <rect x="16" y="20" width="308" height="180" rx="14" class="f-surface s-ink" stroke-width="3"/>
+          <line x1="16" y1="54" x2="324" y2="54" class="s-line" stroke-width="2"/>
+          <circle cx="38" cy="37" r="5" class="f-line"/>
+          <circle cx="56" cy="37" r="5" class="f-line"/>
+          <circle cx="74" cy="37" r="5" class="f-line"/>
+          <text x="32" y="93" text-anchor="start" class="svg-t">&gt;</text>
+          <rect x="46" y="76" width="56" height="24" rx="6" class="f-accent"/>
+          <text x="74" y="93" text-anchor="middle" class="svg-ta">/kiss</text>
+          <text x="110" y="93" text-anchor="start" class="svg-t">deep how CORS works</text>
+          <rect x="32" y="122" width="150" height="8" rx="4" class="f-line"/>
+          <rect x="32" y="138" width="110" height="8" rx="4" class="f-line"/>
+          <rect x="32" y="154" width="130" height="8" rx="4" class="f-line"/>
+          <g transform="translate(224 110)">
+            <rect width="72" height="58" rx="6" class="f-bg s-line" stroke-width="2"/>
+            <rect x="10" y="11" width="40" height="6" rx="3" class="f-muted"/>
+            <rect x="10" y="24" width="22" height="22" rx="4" class="f-line"/>
+            <rect x="38" y="26" width="24" height="5" rx="2.5" class="f-line"/>
+            <rect x="38" y="36" width="18" height="5" rx="2.5" class="f-line"/>
+          </g>
+          <text x="260" y="186" text-anchor="middle" class="svg-tm">one page</text>
+        </svg>
+      </div>
+      <div class="words">
+        <div class="head"><div class="stamp">1</div><h2>You type /kiss and a topic</h2></div>
+        <p>Give it a topic, a question or a piece of your code. Put <code>simple</code> or <code>deep</code> first to pick how far down it goes.</p>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Depth</th><th>For</th><th>You get</th></tr></thead>
+            <tbody>
+              <tr><td><code>simple</code></td><td>new to the field</td><td>3–4 steps, plain words, no code</td></tr>
+              <tr><td>default</td><td>new to this topic</td><td>4–6 steps, the real names, short code</td></tr>
+              <tr><td><code>deep</code></td><td>wants the internals</td><td>6–8 steps, failure modes, numbers, code</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="pic">
+        <svg viewBox="0 0 340 220" role="img" aria-label="A magnifier over the next() line of lib/router.js, with a spec waiting beside it">
+          <rect x="22" y="16" width="200" height="188" rx="10" class="f-surface s-ink" stroke-width="2.5"/>
+          <text x="38" y="42" text-anchor="start" class="svg-t">lib/router.js</text>
+          <line x1="22" y1="54" x2="222" y2="54" class="s-line" stroke-width="2"/>
+          <rect x="38" y="68" width="120" height="8" rx="4" class="f-line"/>
+          <rect x="50" y="84" width="96" height="8" rx="4" class="f-line"/>
+          <rect x="50" y="100" width="150" height="24" rx="6" class="f-accent"/>
+          <text x="144" y="117" text-anchor="start" class="svg-ta">next()</text>
+          <rect x="50" y="132" width="84" height="8" rx="4" class="f-line"/>
+          <rect x="38" y="148" width="110" height="8" rx="4" class="f-line"/>
+          <rect x="38" y="164" width="70" height="8" rx="4" class="f-line"/>
+          <circle cx="168" cy="112" r="42" fill="none" class="s-ink" stroke-width="4"/>
+          <path d="M198 142 L236 182" class="s-ink" stroke-width="10" stroke-linecap="round"/>
+          <g transform="translate(248 30)">
+            <rect width="72" height="92" rx="6" class="f-surface s-line" stroke-width="2"/>
+            <rect x="12" y="14" width="34" height="7" rx="3.5" class="f-muted"/>
+            <rect x="12" y="32" width="48" height="6" rx="3" class="f-line"/>
+            <rect x="12" y="46" width="40" height="6" rx="3" class="f-line"/>
+            <rect x="12" y="60" width="46" height="6" rx="3" class="f-line"/>
+            <rect x="12" y="74" width="30" height="6" rx="3" class="f-line"/>
+          </g>
+          <text x="284" y="142" text-anchor="middle" class="svg-tm">spec</text>
+        </svg>
+      </div>
+      <div class="words">
+        <div class="head"><div class="stamp">2</div><h2>It reads before it writes</h2></div>
+        <p>Name code in your project, and it reads that code first: <b>your files, your functions, your flow</b>. For a general topic, it checks the spec or the official docs.</p>
+        <p>Then it picks one concrete trace, like <code>GET /users/42</code>, and follows it. No definition up front.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="pic">
+        <svg viewBox="0 0 340 220" role="img" aria-label="Five numbered stops on one line, from send to inbox, with the whole route outlined">
+          <text x="170" y="36" text-anchor="middle" class="svg-tb">the whole trip</text>
+          <rect x="14" y="56" width="312" height="104" rx="20" fill="none" class="s-accent" stroke-width="3" stroke-dasharray="8 6"/>
+          <line x1="48" y1="100" x2="292" y2="100" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+          <circle cx="48" cy="100" r="14" class="f-surface s-ink" stroke-width="2.5"/>
+          <circle cx="109" cy="100" r="14" class="f-surface s-ink" stroke-width="2.5"/>
+          <circle cx="170" cy="100" r="14" class="f-surface s-ink" stroke-width="2.5"/>
+          <circle cx="231" cy="100" r="14" class="f-surface s-ink" stroke-width="2.5"/>
+          <circle cx="292" cy="100" r="14" class="f-surface s-ink" stroke-width="2.5"/>
+          <text x="48" y="104" text-anchor="middle" class="svg-t">1</text>
+          <text x="109" y="104" text-anchor="middle" class="svg-t">2</text>
+          <text x="170" y="104" text-anchor="middle" class="svg-t">3</text>
+          <text x="231" y="104" text-anchor="middle" class="svg-t">4</text>
+          <text x="292" y="104" text-anchor="middle" class="svg-t">5</text>
+          <text x="48" y="138" text-anchor="middle" class="svg-tm">send</text>
+          <text x="109" y="138" text-anchor="middle" class="svg-tm">:587</text>
+          <text x="170" y="138" text-anchor="middle" class="svg-tm">MX</text>
+          <text x="231" y="138" text-anchor="middle" class="svg-tm">:25</text>
+          <text x="292" y="138" text-anchor="middle" class="svg-tm">inbox</text>
+          <text x="170" y="194" text-anchor="middle" class="svg-t">before any detail</text>
+        </svg>
+      </div>
+      <div class="words">
+        <div class="head"><div class="stamp">3</div><h2>It shows the whole route first</h2></div>
+        <p>Before any detail, you see every stop in order, on one line. You always know where you are.</p>
+        <p>One everyday metaphor runs the whole way: a ticket, a guest list, a sealed letter. Where it bends the truth, the page says so.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="pic">
+        <svg viewBox="0 0 340 220" role="img" aria-label="The route shrunk to a row of dots; the middle stop opens into a big card with a letter and its real name">
+          <line x1="90" y1="30" x2="250" y2="30" class="s-line" stroke-width="2"/>
+          <circle cx="90" cy="30" r="7" class="f-surface s-line" stroke-width="2"/>
+          <circle cx="130" cy="30" r="7" class="f-surface s-line" stroke-width="2"/>
+          <circle cx="210" cy="30" r="7" class="f-surface s-line" stroke-width="2"/>
+          <circle cx="250" cy="30" r="7" class="f-surface s-line" stroke-width="2"/>
+          <path d="M163 38 L56 80" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+          <path d="M177 38 L284 80" fill="none" class="s-muted" stroke-width="2" stroke-dasharray="5 5"/>
+          <circle cx="170" cy="30" r="11" class="f-accent s-ink" stroke-width="2.5"/>
+          <rect x="50" y="80" width="240" height="126" rx="14" class="f-surface s-ink" stroke-width="2.5"/>
+          <g transform="translate(72 104)">
+            <rect width="78" height="50" rx="6" class="f-bg s-ink" stroke-width="2.5"/>
+            <path d="M3 4 L39 28 L75 4" fill="none" class="s-ink" stroke-width="2.5"/>
+          </g>
+          <text x="111" y="178" text-anchor="middle" class="svg-tm">letter</text>
+          <rect x="172" y="106" width="96" height="8" rx="4" class="f-line"/>
+          <rect x="172" y="122" width="70" height="8" rx="4" class="f-line"/>
+          <rect x="172" y="146" width="64" height="26" rx="6" class="f-bg s-line" stroke-width="2"/>
+          <text x="204" y="163" text-anchor="middle" class="svg-t">:587</text>
+        </svg>
+      </div>
+      <div class="words">
+        <div class="head"><div class="stamp">4</div><h2>Then it zooms in, one stop at a time</h2></div>
+        <p>Each stop gets a stamped step: a big flat drawing on the left, a few plain words on the right, then the real names in code.</p>
+        <p>One thing in each drawing is orange: <b>the part that decides</b>.</p>
+        <p class="big-idea">Zoom, don't simplify. Fewer ideas at a time, never wrong ones.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="pic">
+        <svg viewBox="0 0 340 220" role="img" aria-label="The end box: a catch, a question to ask next and the sources">
+          <rect x="30" y="18" width="280" height="184" rx="16" class="f-surface s-ink" stroke-width="3"/>
+          <text x="52" y="54" text-anchor="start" class="svg-tb">Before you rely on it</text>
+          <rect x="52" y="76" width="84" height="24" rx="12" class="f-no" opacity=".2"/>
+          <text x="94" y="93" text-anchor="middle" class="svg-t">catch</text>
+          <rect x="150" y="84" width="136" height="8" rx="4" class="f-line"/>
+          <rect x="52" y="116" width="84" height="24" rx="12" class="f-accent"/>
+          <text x="94" y="133" text-anchor="middle" class="svg-ta">ask next</text>
+          <rect x="150" y="124" width="110" height="8" rx="4" class="f-line"/>
+          <rect x="52" y="156" width="84" height="24" rx="12" class="f-yes" opacity=".25"/>
+          <text x="94" y="173" text-anchor="middle" class="svg-t">sources</text>
+          <rect x="150" y="164" width="124" height="8" rx="4" class="f-line"/>
+        </svg>
+      </div>
+      <div class="words">
+        <div class="head"><div class="stamp">5</div><h2>It ends with what to doubt</h2></div>
+        <p>Every page closes with an honest box: the catch, the questions a sharp reader asks next, what it left out, its sources and anything it could not verify.</p>
+        <p>A number is measured, sourced or marked as an example. Never invented.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="pic">
+        <svg viewBox="0 0 340 220" role="img" aria-label="ELI5 says magic mailman; /kiss draws the letter and keeps the name MX lookup">
+          <text x="85" y="30" text-anchor="middle" class="svg-tb">ELI5</text>
+          <text x="255" y="30" text-anchor="middle" class="svg-tb">/kiss</text>
+          <line x1="170" y1="16" x2="170" y2="206" class="s-line" stroke-width="2" stroke-dasharray="6 6"/>
+          <rect x="26" y="62" width="118" height="62" rx="16" class="f-bg s-line" stroke-width="2"/>
+          <path d="M52 124 L46 146 L72 124" class="f-bg s-line" stroke-width="2" stroke-linejoin="round"/>
+          <text x="85" y="88" text-anchor="middle" class="svg-t">magic</text>
+          <text x="85" y="106" text-anchor="middle" class="svg-t">mailman</text>
+          <text x="85" y="180" text-anchor="middle" class="svg-tm">nothing to search</text>
+          <g transform="translate(216 52)">
+            <rect width="78" height="50" rx="6" class="f-surface s-ink" stroke-width="2.5"/>
+            <path d="M3 4 L39 28 L75 4" fill="none" class="s-ink" stroke-width="2.5"/>
+          </g>
+          <rect x="201" y="122" width="108" height="30" rx="8" fill="none" class="s-accent" stroke-width="3" stroke-dasharray="6 4"/>
+          <text x="255" y="142" text-anchor="middle" class="svg-t">MX lookup</text>
+          <text x="255" y="180" text-anchor="middle" class="svg-tm">real name kept</text>
+        </svg>
+      </div>
+      <div class="words">
+        <div class="head"><div class="stamp why">why</div><h2>Why not just ask for ELI5?</h2></div>
+        <ol class="reasons">
+          <li><b>ELI5 talks to a five-year-old.</b> It swaps the real names for baby words, so you have nothing to search for later. <code>/kiss</code> keeps every name.</li>
+          <li><b>Pictures carry the load.</b> You recall the page as drawings, so the words can stay few.</li>
+          <li><b>One file, no build.</b> Plain HTML in Claude's palette, light and dark, readable on a phone.</li>
+        </ol>
+      </div>
+    </section>
+  </section>
+
+  <section class="status" aria-labelledby="end">
+    <h2 id="end">Before you install</h2>
+    <ul>
+      <li><span class="pill no">catch</span><span>It writes a page, not a chat answer. If your Claude can publish artifacts, you get a link. If not, it saves <code>kiss-&lt;topic&gt;.html</code> in your folder.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Does it work on my own code?</b> Yes. Name a file, a route or a flow, and it reads that code first, then uses your names.</span></li>
+      <li><span class="pill new">ask next</span><span><b>Can I change the look?</b> Every page starts from one <code>template.html</code> in the skill. Change it, and every new page follows.</span></li>
+      <li><span class="pill yes">sources</span><span>The whole skill is three files on <a href="https://github.com/eranltd/kiss/tree/main/skills/kiss">GitHub</a>: <code>SKILL.md</code>, <code>template.html</code> and <code>example.html</code>. Free, MIT.</span></li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <span>Made by <a href="https://github.com/eranltd">Eran Peled</a></span>
+    <span><a href="https://github.com/eranltd/kiss">github.com/eranltd/kiss</a> · MIT</span>
+  </footer>
+
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent).then(function () {
+      b.textContent = 'Copied';
+      setTimeout(function () { b.textContent = 'Copy'; }, 1500);
+    });
+  });
+});
+</script>
+</body>
+</html>
