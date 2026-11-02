@@ -36,9 +36,9 @@ Ask about code in your project and it reads the code first, then uses the real f
 
 The page is a single HTML file in Claude's palette (black ink, warm greys, one orange): no framework, light and dark mode, phone-friendly. If your Claude can publish artifacts, it publishes one. Otherwise it saves `kiss-<topic>.html`.
 
-The skill ships a reference page, [`skills/kiss/example.html`](skills/kiss/example.html) (how an email reaches an inbox), that sets the drawing bar for every run.
+The skill ships a reference page, [`skills/kiss/example.html`](https://eranltd.github.io/kiss/skills/kiss/example.html) (how an email reaches an inbox), that sets the drawing bar for every run.
 
-See [examples/](examples/): CORS at two depths ([`how-cors-works.html`](examples/how-cors-works.html), [`how-cors-works-deep.html`](examples/how-cors-works-deep.html)), Raft consensus ([`how-raft-works.html`](examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](examples/how-google-one-tap-works.html)), DNS ([`how-dns-works.html`](examples/how-dns-works.html)), and one read from real code: how Express routes a request, traced through Express 5's own source ([`how-express-routes-a-request.html`](examples/how-express-routes-a-request.html)).
+See [examples/](https://github.com/eranltd/kiss/tree/main/examples): CORS at two depths ([`how-cors-works.html`](https://eranltd.github.io/kiss/examples/how-cors-works.html), [`how-cors-works-deep.html`](https://eranltd.github.io/kiss/examples/how-cors-works-deep.html)), Raft consensus ([`how-raft-works.html`](https://eranltd.github.io/kiss/examples/how-raft-works.html)), Google One Tap ([`how-google-one-tap-works.html`](https://eranltd.github.io/kiss/examples/how-google-one-tap-works.html)), DNS ([`how-dns-works.html`](https://eranltd.github.io/kiss/examples/how-dns-works.html)), and one read from real code: how Express routes a request, traced through Express 5's own source ([`how-express-routes-a-request.html`](https://eranltd.github.io/kiss/examples/how-express-routes-a-request.html)).
 
 <img src="docs/phone-dark.jpg" alt="The same step on a phone in dark mode: the cabinet drawing above its stamped heading and words" width="320">
 
