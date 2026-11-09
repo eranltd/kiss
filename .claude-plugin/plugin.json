@@ -1,5 +1,6 @@
 {
   "name": "kiss",
+  "displayName": "KISS Explain",
   "version": "1.1.0",
   "description": "Explain any tech topic or codebase as one visual HTML page: the whole route first, then a drawing per step with the real names. ELI5 for engineers. Use /kiss <topic>, /kiss simple or /kiss deep.",
   "author": {
