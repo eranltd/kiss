@@ -23,7 +23,7 @@ Input: $ARGUMENTS
 
 ## The page
 
-Start from [template.html](template.html). Copy its `<head>` and `<style>` unchanged except the `<title>`, and replace the content. Use only the template's components. [example.html](example.html) is a finished page at `normal` depth. Copy its drawing style, not its topic.
+Start from the HTML in [template.md](template.md). Copy its `<head>` and `<style>` unchanged except the `<title>`, and replace the content. Use only the template's components. The HTML in [example.md](example.md) is a finished page at `normal` depth. Copy its drawing style, not its topic.
 
 1. **Hero** (`header.hero`):
    - `.eyebrow`: the area and "explained simply" ("Email · explained simply").

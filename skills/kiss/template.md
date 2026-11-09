@@ -1,3 +1,8 @@
+# template.html
+
+The kiss page template. Copy everything inside the html block below.
+
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -363,3 +368,4 @@ a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 </main>
 </body>
 </html>
+```

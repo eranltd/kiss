@@ -1,3 +1,8 @@
+# example.html
+
+A finished kiss page at `normal` depth: how an email reaches an inbox. Copy its drawing style, not its topic. Everything inside the html block below is the page.
+
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -384,3 +389,4 @@ a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 </main>
 </body>
 </html>
+```
