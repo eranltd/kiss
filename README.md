@@ -55,6 +55,10 @@ That marketplace also lists [pixel-pet](https://github.com/eranltd/pixel-pet). T
 
 ELI5 talks to a five-year-old. `kiss` talks to someone who studied this stuff and is new to this one topic: few words and big pictures, but it keeps the real terms, shows the mechanism, and points at where it lives in the code.
 
+## Data and privacy
+
+`kiss` reads files in the open project only when the topic is about project code. It writes one HTML file to the current folder, or publishes it as an artifact where the app supports that. The generated page loads its fonts from Google Fonts (`fonts.googleapis.com` and `fonts.gstatic.com`), so opening the page contacts Google. The plugin sends nothing anywhere else.
+
 ## License
 
 MIT
