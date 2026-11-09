@@ -1,6 +1,6 @@
 ---
 name: kiss
-description: Explain a technical topic to a developer the keep-it-simple way, as one plain HTML page. A short route of the whole flow comes first, then one stamped step per stop, each with a big flat drawing on the left and a few words with the real names on the right. Use when the user types /kiss <topic>, /kiss simple <topic> or /kiss deep <topic>, or asks for a simple, KISS or "explain it plainly" explainer of how some tech, system, flow or piece of code works, or which of two options to pick.
+description: Explain a technical topic to a developer the keep-it-simple way, as one plain HTML page. A short route of the whole flow comes first, then one stamped step per stop, each with a big flat drawing on the left and a few words with the real names on the right. Use when the user types /kiss <topic>, /kiss simple <topic> or /kiss deep <topic>, or asks for a simple, KISS, ELI5, "explain like I'm five", "in simple terms", "dumb it down" or "explain it plainly" explainer of how some tech, system, flow or piece of code works, or which of two options to pick. Also use it when the prompt says ELI5 about a technical topic, even without /kiss.
 license: MIT
 ---
 
